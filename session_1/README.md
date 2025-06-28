@@ -41,7 +41,6 @@ In other words, the CKAD is more about the application side of Kubernetes, while
 The exam is time-limited, so practice managing your time effectively. Use shortcuts and aliases to speed your workflow. If you get stuck on a question, move on and come back to it later if time allows. The exam environment allows you to flag the questions you want to revisit, so use that feature wisely.
 
 
-
 I highly recommend the following ALIASes to speed up your exam flow:
 
 ```bash
@@ -87,7 +86,11 @@ storageclasses                    sc           storage.k8s.io/v1                
 
 ## VIM shortcuts intro
 
-Vim is a powerful text editor that is often used in the Kubernetes ecosystem. You will need to be familiar with basic Vim commands to navigate and edit files during the exam. Here are some essential Vim shortcuts:
+Vim is a powerful text editor that is often used in the Kubernetes ecosystem. You will need to be familiar with basic Vim commands to navigate and edit files during the exam. 
+
+### TASK! (#1)
+
+For testing the shortcuts listed below, you can use any text file you have available or if you are lazy to find somathing suitable, feel free to get the dummy one prepared for you in [./task1_1/dummy_text.yaml](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_1/task1_1/dummy_text.yaml).
 
 ### Basic Movement: 
 **h** - left <br>
@@ -120,13 +123,18 @@ Need to move more words or lines at once? Use numbers before the commands: <br>
 **o** - open a new line below the current line <br>
 **O** - open a new line above the current line <br>
 
+### Escape from insert mode:
+
+**Esc** - going away from the current mode
+
 ### Deleting:
 **x** - delete character under the cursor <br>
 **dd** - delete the whole line <br>
 **dw** - delete the word under the cursor <br>
 **d$** - delete from the cursor to the end of the line <br>
 **d^** - delete from the cursor to the beginning of the line <br>
-**d** + number + **w** - delete multiple words (e.g. **3 dw** <br>
+It is possible to combine with count when deleting, as well:
+**d** + number + **w / d**  - delete multiple words (e.g. **d3w or d5d**)<br>
 
 ### Copying and Pasting:
 **yy** - copy the whole line <br>
@@ -138,16 +146,16 @@ Need to move more words or lines at once? Use numbers before the commands: <br>
 ### Visual Mode:
 **v** - enter visual mode to select text <br>
 **V** - enter visual line mode to select whole lines <br>
-**y p** <br>
 
 ### Indentation:
 **>>** - move indentation of selected text to the right side <br>
 **shift+>>** - move indentation of selected text to the left side <br>
 
 ### Undo and Redo:
- **u Ctrl+r** <br>
+ **u** - undo the last change <br> 
+ **Ctrl+r** - redo the last undo <br>
 
-Quitting Vim: <br>
+### Quitting Vim: <br>
 **:q** - quit <br>
 **:wq** - save and quit <br>
 **:x** - save and quit but better :) <br>
@@ -155,7 +163,7 @@ Quitting Vim: <br>
 
 It would be good to practice these shortcuts before the exam as much as possible to get used to them and increase your speed during editing.
 
-And now, time for the first game!
+And now, time for the **first game**!
 
 GAME: [Bug Squasher](https://www.vim-hero.com/lessons/basics-review)
 
@@ -164,7 +172,7 @@ GAME: [Bug Squasher](https://www.vim-hero.com/lessons/basics-review)
 * 2: Use insert mode to restore the characters devoured by bugs.
 * Time cap: 5 minutes
 
-Other sources for Vim practice:
+### Additional sources (#1)
 * Vimtutor - just write 'vimtutor' in your terminal
 * [ThePrimeagen](https://www.youtube.com/watch?v=X6AR2RMB5tE&t=360s) really nice intro to Vim
 * most important - practice, practice, practice on real files
@@ -194,99 +202,96 @@ CMD ["python", "miaumiau.py"]
 In the CKAD exam, it is not necessary to have too much deep knowledge of Dockerfile syntax and the docs about this topic are 
 not available during the exam. It is enough to have some basic knowledge of how to build a Docker image and run it in a container.
 
-**Task time**: 
-* clone the repo if you haven't done it yet
-* go to the `session_1` directory
-* make sure you have Docker or Podman installed
+### TASK! (#2)
+
+* Clone the repo if you haven't done it yet
+* Navigate with your terminal to the `session_1/task1_2` directory
+* Make sure you have Docker or Podman installed
 * How do you feel today? Change the `IFEELLIKEA` environment variable in the Dockerfile to something else than "FRISBEE" (e.g. "STUDY BUDDY", "KUBERNETES SUPERSTAR", "DOCKERNINJA", etc.)
-* build the Docker image with the command: docker build -t miaumiau&lt;&lt;yourname&gt;&gt;:1h .
-* run the Docker image with the command: docker run --rm miaumiau&lt;&lt;yourname&gt;&gt;:1h
-* push ttl.sh image registry: docker push ttl.sh/miaumiau&lt;&lt;yourname&gt;&gt;:1h
+* Build the Docker image with the command: docker build -t miaumiau&lt;&lt;yourname&gt;&gt;:1h .
+* Run the Docker image with the command: docker run --rm miaumiau&lt;&lt;yourname&gt;&gt;:1h
+* Push ttl.sh image registry: docker push ttl.sh/miaumiau&lt;&lt;yournickname&gt;&gt;:1h
 * If you don't have a Docker Hub account, you can use Podman to run the image locally without pushing it to a registry.
 * Run the image with Podman using the command: podman run --rm miaumiau:1.0
 
-
-
 > Note:
 > [ttl.sh](https://ttl.sh/) is a supercool, free, temporary container image registry provided by Replicated. It allows you to:
-> * Push container images using Docker or Podman
+> * Push container images
 > * Set a Time To Live (TTL) after which the image is automatically deleted
 > * Use it without creating an account
 > In other words, a beautiful tool for demos, testing and study sessions like this one!
 
-
+### Additional sources (#2)
 For additional information on Dockerfile syntax, you can refer to the [Dockerfile reference](https://docs.docker.com/reference/dockerfile/).
 More on building images via [docker](https://docs.docker.com/get-started/docker-concepts/building-images/) and [podman](https://docs.podman.io/en/latest/Commands.html) can be found in their respective sections.
 Dockerfile best practices can be found in the [Dockerfile best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/) documentation.
 
-Homework! 
+### Homework! (#1) 
 Killercoda will be your friend through the whole (not only) CKAD journey. Feel free to explore the scenarios dediacated to the Dockerfile and image building:
 * [Dockerfile](https://killercoda.com/scenarios/dockerfile)
 When working on exercises, try to use at least some of the VIM shortcuts you learned in this session :)
 
-## PODS playground
+## PODs playground
 
 ### What the hell are pods?
 Pods are the smallest deployable units in Kubernetes and can contain one or more containers. These containers share the same network namespace and can communicate with each other using localhost.
 
-What is the Pod resource for?
 The Pod resource tells Kubernetes:
-
-What container(s) to run (like Docker images)
-
-How to run them (CPU, memory, ports, etc.)
-
-Where they should live (on which node)
-
-How they connect to the network
-
-What to do if the container crashes
+* What container(s) to run (like Docker images)
+* How to run them (CPU, memory, ports, etc.)
+* Where they should live (on which node)
+* How they connect to the network
+* What to do if the container crashes*
 
 Why not just run containers directly?
-Because Kubernetes manages containers through Pods, not directly.
-
-If you run a container in Kubernetes, it always wraps it in a Pod.
-
-Even a single container needs to live in a Pod.
-
- If there are multiple containers in a Pod?
-They:
-
-Run on the same machine
-
-Share the same IP address
-
-Can talk to each other using localhost
-
-Can share storage
-
-This is great for helper containers, like:
-
-A web server + a log collector
-
-A main app + a sidecar
+* Because Kubernetes manages containers through Pods, not directly.
+* If you run a container in Kubernetes, it always wraps it in a Pod.
+* Even a single container needs to live in a Pod.
 
 In most Pods, there's usually one main container, and that's the one doing the "real work" (like running your app).
 
-What can we "do" with resources in general?
+>Note: *What can we "do" with resources in general?*
+>
+> - create
+> - edit
+> - describe
+> - delete
+> - replace
+> - apply
+> - scale (deployment, replicaset, statefulset)
+> - rollout (deployment)
+> - label
+> - annotate
+> - expose (pod, deployment, replicaset, statefulset)
+> - logs (pods)
+> - run (pods)
 
-create
-edit
-describe
-delete
-replace
-apply
-scale
-rollout
-label
-annotate
-expose
-logs
+RUN action for pod is basically the same as CREATE action for any other resource within kubernetes
 
-A pod example
+`kubectl run` was originally designed for quickly launching Pods (especially for testing)
+`kubectl create` is used for creating complete, named resources (Deployments, Services, etc.) from YAML or CLI. 
 
+Let's have a look at first at all the options we have with the RUN action for pod.
+The -h flag is and will be useful many times because it shows flags we can use for the commands, their explanations and some examples. This will be useful for the exam as one cannot remember everything.
 
-TASK!
+```bash
+k run -h
+```
+For running a pod directly, we always need to have:
+- image name
+- pod name
+
+```bash
+k run mylovelyimage --image=nginx
+```
+
+Let's try something else and add more options by using flags:
+
+```bash
+kubectl run lol -it --rm --restart=Never --image=wernight/funbox -- cowsay "Kubernetes is fun"
+```
+
+### TASK! (#3)
 
 Create and run a temporary Kubernetes pod that:
 
@@ -296,28 +301,28 @@ Create and run a temporary Kubernetes pod that:
 * Launches in *interactive mode*
 * Cleans itself up automatically after exit (no leftover pod)
 
-Stuck on the way? Use the command from [this file](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_1/commands.md) as a reference.
+Stuck on the way? Use the command from [this file](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_1/task1_3/command.md) as a reference.
 
-Editing the resource - life and from yaml
+#### Editing the resource - life and from yaml
 If you want to edit the Pod resource, you can use the `kubectl edit` command. This will open the resource in your default editor (usually Vim or Nano) and allow you to make changes directly.
 
 ```bash
 kubectl edit pod <pod-name>
+```
 
 However, when editing resources like this, it is necessary to delete some fields that are not editable, such as `status`, `metadata.creationTimestamp`, and `metadata.resourceVersion`. If you don't delete these fields, the command will fail with an error message. 
 
-TASK!
+### TASK! (#4)
 * create a pod with name 'juchjuch' and image 'nginx:latest'
 * edit the pod and change the image to 'nginx:1.23'
 
 Try to use some of the VIM shorcuts you learned in this session, such as `i` to enter insert mode, `x` to delete characters, and `dd` to delete lines.
 
-
-kubectl get pods	List all Pods in the current namespace
-kubectl get pods -A	List all Pods in all namespaces
-kubectl describe pod <pod-name>	Detailed info about the Pod (events, conditions, etc.)
-kubectl get pod <pod-name> -o yaml	Get full YAML manifest of the Pod
-kubectl get pod <pod-name> -o wide
+k get po	List all Pods in the current namespace
+k get po -A	List all Pods in all namespaces
+k describe po <pod-name>	Detailed info about the Pod (events, conditions, etc.)
+k get po <pod-name> -o yaml	Get full YAML manifest of the Pod
+k get po <pod-name> -o wide
 
 ### Imperative vs declarative approach
 
@@ -325,24 +330,32 @@ During the exam, you will mostly use the imperative approach, which means you wi
 
 ### Multi-container Pod design patterns (e.g. sidecar, init and others)
 
+If there are multiple containers in a Pod?
+They:
+* Run on the same machine
+* Share the same IP address
+* Can talk to each other using localhost
+* Can share storage
+
+This is great for helper containers, like:
+
+* A web server + a log collector
+* A main app + a sidecar
+
 In Kubernetes, a Pod is the smallest deployable unit and can host one or more containers that:
 
-Share the same network namespace
-
-Share volumes
-
-Are co-located and scheduled together
+* Share the same network namespace
+* Share volumes
+* Are co-located and scheduled together
 
 You use multi-container Pods when containers need to work closely together, often in tightly-coupled roles.
 
-1. 🧑‍🔧 Sidecar Pattern
+1. Sidecar Pattern
 Purpose: Add capabilities to the main container
-
 Typical Use Case: Log shipping, proxying, configuration reloaders
+Example: A web server (main container) + a Fluentd container (sidecar) to forward logs.
 
-Example:
-A web server (main container) + a Fluentd container (sidecar) to forward logs.
-
+```yaml
 containers:
 - name: app
   image: my-app
@@ -351,19 +364,20 @@ containers:
   volumeMounts:
   - name: logs
     mountPath: /var/log/app
+```
 
 
-2. 🏁 Init Container Pattern
+2. Init Container Pattern
 Purpose: Run setup logic before main containers start
-
 Typical Use Case: Downloading code, waiting for dependencies, setting up databases
-
 Key Feature: They always run sequentially and must complete successfully before main containers start.
 
+```yaml
 initContainers:
 - name: init-db
   image: busybox
   command: ['sh', '-c', 'until nc -z db 5432; do sleep 2; done']
+```
 
 Lets have a look what documentation examples show regarding the topic:
 * [PODs in general](https://kubernetes.io/docs/concepts/workloads/pods/)
@@ -374,28 +388,25 @@ In the exam, there is a high chance that you will need to create a workload reso
 
 Instead, you will need to use the `kubectl create` / `kubectl apply` command with help of the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>` or just by tweaking the YAML copied from the docs.
 
-TASK!
+### TASK! (#5)
 
 Create a Pod with Init, Main, and Sidecar Containers 
 
 1. Init Container
 Name: wait-init
-
 Image: busybox:1.28
-
 Command: Simulate a wait using:
+
 2. Main Container
 Name: web-app
-
 Image: nginx:1.25
-
-Use default nginx behavior (no custom command)
 
 3. Sidecar Container
 Name: heartbeat
-
-Image: busybox:1.28
-
+Image: busybox:
 Command: Print a heartbeat message every 10 seconds:
 
 kubectl logs lightweight-pod -c heartbeat
+
+That would be it for the first STUDYBUDDIES SESSION! 
+I hope you enjoyed it, please let me know your feedback and any improvement suggestions, this should help us all with preparation and the right feedback would make this serie more efficient.
