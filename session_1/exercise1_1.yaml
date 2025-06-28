@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: brunchify-pod
+  labels:
+    app.kubernetes.io/name: Brunchify
+spec:
+  containers:
+  - name: toast-engine
+    image: avocado:latest
+    command: ['sh', '-c', 'echo Smashed avocado engaged! && sleep infinity']
+  - name: vibe-sidecar
+    image: vinyl-player:2025
+    command: ['sh', '-c', 'while true; do echo "Lo-fi beats to chill and deploy to"; sleep 5; done']
+  initContainers:
+  - name: init-latte
+    image: barista:1.0
+    command: ['sh', '-c', 'echo Warming up oat milk... && sleep 3']
+  - name: init-wifi
+    image: hotspot:beta
+    command: ['sh', '-c', 'until ping -c1 soy-router.local; do echo Searching for Wi-Fi; sleep 2; done']

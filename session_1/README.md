@@ -45,9 +45,9 @@ The exam is time-limited, so practice managing your time effectively. Use shortc
 I highly recommend the following ALIASes to speed up your exam flow:
 
 ```bash
-
-export do=“--dry-run=client -o yaml”  # usage example: k create deploy nginx --image=nginx $do
-export now=“--force --grace-period 0” # usage example: k delete pod x $now
+export do="--dry-run=client -o yaml" # usage example: k create deploy nginx --image=nginx $do
+export now="--force --grace-period 0" # usage example: k delete pod x $now
+alias k=kubectl
 ```
 * It is highly beneficial to use shortcuts for resources definitions (po, rs, sts, k...) 
 ```bash
@@ -82,7 +82,6 @@ storageclasses                    sc           storage.k8s.io/v1                
 ...
 
 ```
-
 * Imperative commands is the way to go, as you will not have time to write YAML files during the exam. This is a bit different from the real world scenarios, where gitops and YAML files are the best practice.
 * Docs are your friend, especially because of the example yaml files. During the exam, you can use the official Kubernetes documentation as well as Kubernetes blog although that one is not very useful.
 
@@ -90,16 +89,71 @@ storageclasses                    sc           storage.k8s.io/v1                
 
 Vim is a powerful text editor that is often used in the Kubernetes ecosystem. You will need to be familiar with basic Vim commands to navigate and edit files during the exam. Here are some essential Vim shortcuts:
 
-Basic Movement: **h j k l** <br>
-Moving with words: **w e b** <br>
-Insert Mode: **i a** <br>
-Insert at Line Ends: **I O** <br>
-Opening Lines: **o O** <br>
-Deleting: **x dd dw** <br>
-Copying and Pasting: **y p** <br>
-Select more lines: **v** <br>
+### Basic Movement: 
+**h** - left <br>
+**j** - down <br>
+**k** - up <br>
+**l** - right <br>
 
-During hands-on tasks, it would be good to practice these shortcuts. You can use the Vim Hero website to practice Vim shortcuts interactively.
+Yes, it is possible to use just arrows for the time being with the same movement purpose. But the "theory" says
+using them requires you to move your right hand completely away from the home row keys. This is inefficient. 
+Vim is about efficiency, which means staying as close as possible to the home row keys.
+
+### Moving with words:
+**w** - next word <br>
+**e** - end of word <br>
+**b** - back to the beginning of the word <br>
+
+Need to move more words or lines at once? Use numbers before the commands: <br>
+**2w** - move 2 words forward <br>
+**3j** - move 3 lines down <br>
+
+### Insert Mode:
+ **i** - insert before the cursor <br>
+ **a** - insert after the cursor <br>
+
+**Insert at Line Ends** <br>
+**I** - insert in the beginning of line <br>
+**O** - insert in the end of the line <br>
+
+### Opening Lines: 
+**o** - open a new line below the current line <br>
+**O** - open a new line above the current line <br>
+
+### Deleting:
+**x** - delete character under the cursor <br>
+**dd** - delete the whole line <br>
+**dw** - delete the word under the cursor <br>
+**d$** - delete from the cursor to the end of the line <br>
+**d^** - delete from the cursor to the beginning of the line <br>
+**d** + number + **w** - delete multiple words (e.g. **3 dw** <br>
+
+### Copying and Pasting:
+**yy** - copy the whole line <br>
+**yw** - copy the word under the cursor <br>
+**p** - paste after the cursor <br>
+**P** - paste before the cursor <br>
+**d** + number + **y** - copy multiple lines (e.g. **3 yy** <br>
+
+### Visual Mode:
+**v** - enter visual mode to select text <br>
+**V** - enter visual line mode to select whole lines <br>
+**y p** <br>
+
+### Indentation:
+**>>** - move indentation of selected text to the right side <br>
+**shift+>>** - move indentation of selected text to the left side <br>
+
+### Undo and Redo:
+ **u Ctrl+r** <br>
+
+Quitting Vim: <br>
+**:q** - quit <br>
+**:wq** - save and quit <br>
+**:x** - save and quit but better :) <br>
+**:q!** - quit without saving <br>
+
+It would be good to practice these shortcuts before the exam as much as possible to get used to them and increase your speed during editing.
 
 And now, time for the first game!
 
@@ -242,14 +296,21 @@ Create and run a temporary Kubernetes pod that:
 * Launches in *interactive mode*
 * Cleans itself up automatically after exit (no leftover pod)
 
+Stuck on the way? Use the command from [this file](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_1/commands.md) as a reference.
 
+Editing the resource - life and from yaml
+If you want to edit the Pod resource, you can use the `kubectl edit` command. This will open the resource in your default editor (usually Vim or Nano) and allow you to make changes directly.
 
 ```bash
-kubectl run meowww -it --rm --restart=Never --image=wernight/funbox -- nyancat
+kubectl edit pod <pod-name>
 
+However, when editing resources like this, it is necessary to delete some fields that are not editable, such as `status`, `metadata.creationTimestamp`, and `metadata.resourceVersion`. If you don't delete these fields, the command will fail with an error message. 
 
+TASK!
+* create a pod with name 'juchjuch' and image 'nginx:latest'
+* edit the pod and change the image to 'nginx:1.23'
 
-
+Try to use some of the VIM shorcuts you learned in this session, such as `i` to enter insert mode, `x` to delete characters, and `dd` to delete lines.
 
 
 kubectl get pods	List all Pods in the current namespace
@@ -258,4 +319,83 @@ kubectl describe pod <pod-name>	Detailed info about the Pod (events, conditions,
 kubectl get pod <pod-name> -o yaml	Get full YAML manifest of the Pod
 kubectl get pod <pod-name> -o wide
 
-k run 
+### Imperative vs declarative approach
+
+During the exam, you will mostly use the imperative approach, which means you will use commands to create and manage resources directly. This is different from the declarative approach, where you define resources in YAML files and apply them using `kubectl apply`. Often, you will need to use the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>`.
+
+### Multi-container Pod design patterns (e.g. sidecar, init and others)
+
+In Kubernetes, a Pod is the smallest deployable unit and can host one or more containers that:
+
+Share the same network namespace
+
+Share volumes
+
+Are co-located and scheduled together
+
+You use multi-container Pods when containers need to work closely together, often in tightly-coupled roles.
+
+1. 🧑‍🔧 Sidecar Pattern
+Purpose: Add capabilities to the main container
+
+Typical Use Case: Log shipping, proxying, configuration reloaders
+
+Example:
+A web server (main container) + a Fluentd container (sidecar) to forward logs.
+
+containers:
+- name: app
+  image: my-app
+- name: fluentd
+  image: fluentd
+  volumeMounts:
+  - name: logs
+    mountPath: /var/log/app
+
+
+2. 🏁 Init Container Pattern
+Purpose: Run setup logic before main containers start
+
+Typical Use Case: Downloading code, waiting for dependencies, setting up databases
+
+Key Feature: They always run sequentially and must complete successfully before main containers start.
+
+initContainers:
+- name: init-db
+  image: busybox
+  command: ['sh', '-c', 'until nc -z db 5432; do sleep 2; done']
+
+Lets have a look what documentation examples show regarding the topic:
+* [PODs in general](https://kubernetes.io/docs/concepts/workloads/pods/)
+* [init containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
+* [sidecar containers](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/)
+
+In the exam, there is a high chance that you will need to create a workload resource (like Deployment, DaemonSet, or CronJob) that uses multi-container Pods. You will need to understand how to define the containers, their images, and how they interact with each other. This is something you cannot do just with the `kubectl run` command, as it is not suitable for creating complex resources with multiple containers.
+
+Instead, you will need to use the `kubectl create` / `kubectl apply` command with help of the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>` or just by tweaking the YAML copied from the docs.
+
+TASK!
+
+Create a Pod with Init, Main, and Sidecar Containers 
+
+1. Init Container
+Name: wait-init
+
+Image: busybox:1.28
+
+Command: Simulate a wait using:
+2. Main Container
+Name: web-app
+
+Image: nginx:1.25
+
+Use default nginx behavior (no custom command)
+
+3. Sidecar Container
+Name: heartbeat
+
+Image: busybox:1.28
+
+Command: Print a heartbeat message every 10 seconds:
+
+kubectl logs lightweight-pod -c heartbeat
