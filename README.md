@@ -5,7 +5,7 @@ Repo with material for the POC CKAD training sessions
 - [x] Define, build and modify container images
 - [ ] Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.)
 - [ ] Understand multi-container Pod design patterns (e.g. sidecar, init and others)
-- [ ]Utilize persistent and ephemeral volumes
+- [ ] Utilize persistent and ephemeral volumes
 
 #### Application Deployment (20%)
 - [ ] Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary)

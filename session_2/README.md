@@ -3,10 +3,11 @@ SESSION 2, 2.7.2025
 
 ## Content of the session:
 
-* Learn about Kubernetes cluster, nodes and namespaces
-
 **Application Design and Build**
-* Choose and use the right workload resource \
+* Imperative vs declarative approach
+* Understand multi-container Pod design patterns (e.g. sidecar, init and others)
+* Learn about Kubernetes cluster, nodes and namespaces
+* Choose and use the right workload resource 
   * Deployment
   * ReplicaSet
   * DaemonSet
@@ -15,8 +16,8 @@ SESSION 2, 2.7.2025
   * Cronjob
 
 **Application Observability and Maintenance**
-* Understand API deprecations
 * Implement probes and health checks
+* Understand API deprecations
 
 **Application Deployment**
 * Understand Deployments and how to perform rolling updates
@@ -28,28 +29,39 @@ SESSION 2, 2.7.2025
 
 **wrap up, homework, next steps**
 
-#### Editing the resource - live and from yaml
-If you want to edit a resource, you can use the `k edit` command. This will open the resource in your default editor (usually Vim or Nano) and allow you to make changes directly.
-
-```bash
-k edit <resource type> <pod name> 
-```
-
-When editing resources like this, it is necessary to delete some fields that are not editable, such as `status`, `metadata.creationTimestamp`, and `metadata.resourceVersion`. If you don't delete these fields, the command will fail with an error message. With pods it is not so easy, they are kind of immutable, so you will need to delete the pod and create a new one with the updated configuration otherwise you will get error. Luckily we have also declarative approach, which is more suitable for editing resources.
-
 ### Imperative vs declarative approach
 
-During the exam, you will mostly use the imperative approach, which means you will use commands to create and manage resources directly. This is different from the declarative approach, where you define resources in YAML files and apply them using `kubectl apply`. Often, you will need to use the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>`. Or you will get the yaml manifest of the resource you want to edit by `k get <resource type> <<resource name>> -o yaml > <name your file to edit>.yaml` and then edit it in your favorite editor (e.g. Vim) and apply it using `kubectl apply -f <file name>.yaml`.
+During the exam, you will mostly use the imperative approach, which means you will use commands to create and manage resources directly. 
 
-### TASK! (#4)
-* create a pod with name 'juchjuch' and image 'nginx:latest'
-* edit the pod and change the image to 'nginx:1.23'
+```bash
+k run <pod name> --image=<image name>
+```
 
-Hint: `k get <<resource type>> <<pod name>> -o yaml > <<name your file to edit>>.yaml` will give you the YAML manifest of the pod, which you can use to edit the pod. 
+This is different from the declarative approach, where you define resources in YAML files and apply them using `kubectl apply`. Often, you will need to use the `--dry-run=client -oyaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>`. 
 
-Time CAP: 5 minutes
+```bash
+k run <pod name> --image=<image name> --dry-run=client -oyaml
+``` 
 
-Try to use some of the VIM shorcuts you learned in this session, such as `i` to enter insert mode, `x` to delete characters, `dd` to delete lines...
+```bash
+k run <pod name> --image=<image name> --dry-run=client -oyaml > <name your file to edit>.yaml
+k apply -f <name your file to edit>.yaml
+``` 
+
+In the above case, applying the dry run manifest will create the same pod as the `k run` command, but it allows you to edit the manifest before applying it.
+
+You can get a yaml file also from an existing resource with `k get <resource type> <<resource name>> -o yaml > <name your file to edit>.yaml` and then edit it in your favorite editor (e.g. Vim) and apply it using `kubectl apply -f <file name>.yaml`.
+
+### TASK! (#1)
+* Export a manifest for pod with name 'juchjuch' and image 'nginx:latest' with help of `--dry-run=client -oyaml` and save the manifest to a file called 'juchjuch.yaml'
+* Edit the pod in *VIM* and change the image to 'busybox'
+* Create the pod using the edited manifest file
+
+Time CAP: 2 minutes
+
+Don't forget to use some of the VIM shorcuts you learned in this session, such as `i` to enter insert mode, `x` to delete characters, `dw` to delete words etc...
+
+Stuck on the way? No worries, you can check the solution in the [./task2_2/solution.md](./task2_2/solution.md) file.
 
 #### Useful commands for getting information about Pods
 
@@ -69,13 +81,6 @@ They:
 * Can talk to each other using localhost
 * Can share storage/volumes
 * Are co-located and scheduled together
-
-This is great for helper containers, like:
-
-* A web server + a log collector
-* A main app + a sidecar
-
-In Kubernetes, a Pod is the smallest deployable unit and can host one or more containers that:
 
 You use multi-container Pods when containers need to work closely together, often in tightly-coupled roles.
 
@@ -116,16 +121,16 @@ In the exam, there is a high chance that you will need to create a workload reso
 
 Instead, you will need to use the `kubectl create` / `kubectl apply` command with help of the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>` or just by tweaking the YAML copied from the docs.
 
-### TASK! (#5)
+### TASK! (#2)
 
-Create a Pod with Init, Main, and Sidecar Containers 
+Create a Pod with Init, Main, and Sidecar Containers. You can use Kubernetes documentation or/and `--dry-run=client -o yaml` + adjust values to create the manifest. 
 
 1. Init Container
 Container name: waiter
 Image: busybox
 Command: Simulate a wait using: ['sh', '-c', 'echo "Initializing..." && sleep 5'] 
 
-2. Main Container
+2. Main Container (also pod name)
 Name: president
 Image: nginx
 
@@ -134,11 +139,15 @@ Name: heartbeat
 Image: busybox
 Command: Print a heartbeat message every 10 seconds: ['sh', '-c', 'while true; do echo "Im still alive $(date), time to go to bed for 10 seconds!"; sleep 10; done']
 
-Time CAP: 5 minutes
+*Do the file changes in VIM.*
 
-Hint: Kubernetes docs is your friend. Try to find a similar example and change the values appropriately. Ideally search for it yourself to get used to navigating the site, otherwise if struggling, for example [Example application](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/#sidecar-example) from the Sidecar Containers section could be a good base.
+Time CAP: 4 minutes
 
-Stuck on the way? No worries, you can check the solution in the [./task1_5/solution1_5.md](./task1_5/solution.md) file.
+Hint: Kubernetes docs is your friend. Try to find a similar example and change the values appropriately. 
+
+Hint2: Not found any nice example? I guess a good base for the manifest can be found in the official documentation in the init containers section: [Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/#init-containers-in-use).
+
+Stuck on the way? No worries, you can check the solution in the [./task2_2/solution1_5.md](./task1_5/solution.md) file.
 
 ## Kubernetes Cluster, Nodes and Namespaces
 
@@ -430,6 +439,16 @@ We will wait with task for a statefulset until we get to some other necessary co
 ### Deployments + Understand Deployments and how to perform rolling updates
 
 Deployments are a higher-level abstraction that manages the lifecycle of pods and replicasets. They provide features like rolling updates, rollbacks, and scaling. Deployments ensure that the desired state of the application is maintained, and they automatically handle updates to the application.
+
+#### Editing the resource - live and from yaml
+
+If you want to edit a resource, you can use the `k edit` command. This will open the resource in your default editor (usually Vim or Nano) and allow you to make changes directly.
+
+```bash
+k edit <resource type> <pod name> 
+```
+
+When editing resources like this, it is necessary to delete some fields that are not editable, such as `status`, `metadata.creationTimestamp`, and `metadata.resourceVersion`. If you don't delete these fields, the command will fail with an error message. With pods it is not so easy, they are kind of immutable, so you will need to delete the pod and create a new one with the updated configuration otherwise you will get error. Luckily we have also declarative approach, which is more suitable for editing resources.
 
 ![Deployment](../assets/deploy_rs_po.png)
 Image source: [kubernetes.io](https://kubernetes.io/docs/concepts/workloads/controllers)
