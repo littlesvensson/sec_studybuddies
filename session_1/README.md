@@ -49,8 +49,8 @@ export now="--force --grace-period 0" # usage example: k delete pod x $now
 alias k=kubectl
 ```
 * It is highly beneficial to use shortcuts for resources definitions (po, rs, sts, k...) 
-```bash
 
+```bash
 k api-resources
 
 configmaps                        cm           v1                                     true         ConfigMap
@@ -163,7 +163,7 @@ It is possible to combine with count when deleting, as well:
 
 ### Indentation:
 **>** - move indentation of selected text to the right side <br>
-**shift+>** - move indentation of selected text to the left side <br>
+**<** - move indentation of selected text to the left side <br>
 
 ### Undo and Redo:
  **u** - undo the last change <br> 
@@ -347,117 +347,6 @@ Time CAP: 3 minutes
 
 Stuck on the way? Use the command from [this file](./task1_3/solution.md) as a reference.
 
-#### Editing the resource - live and from yaml
-If you want to edit a resource, you can use the `k edit` command. This will open the resource in your default editor (usually Vim or Nano) and allow you to make changes directly.
-
-```bash
-k edit <resource type> <pod name> 
-```
-
-When editing resources like this, it is necessary to delete some fields that are not editable, such as `status`, `metadata.creationTimestamp`, and `metadata.resourceVersion`. If you don't delete these fields, the command will fail with an error message. With pods it is not so easy, they are kind of immutable, so you will need to delete the pod and create a new one with the updated configuration otherwise you will get error. Luckily we have also declarative approach, which is more suitable for editing resources.
-
-### Imperative vs declarative approach
-
-During the exam, you will mostly use the imperative approach, which means you will use commands to create and manage resources directly. This is different from the declarative approach, where you define resources in YAML files and apply them using `kubectl apply`. Often, you will need to use the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>`. Or you will get the yaml manifest of the resource you want to edit by `k get <resource type> <<resource name>> -o yaml > <name your file to edit>.yaml` and then edit it in your favorite editor (e.g. Vim) and apply it using `kubectl apply -f <file name>.yaml`.
-
-### TASK! (#4)
-* create a pod with name 'juchjuch' and image 'nginx:latest'
-* edit the pod and change the image to 'nginx:1.23'
-
-Hint: `k get <<resource type>> <<pod name>> -o yaml > <<name your file to edit>>.yaml` will give you the YAML manifest of the pod, which you can use to edit the pod. 
-
-Time CAP: 5 minutes
-
-Try to use some of the VIM shorcuts you learned in this session, such as `i` to enter insert mode, `x` to delete characters, `dd` to delete lines...
-
-#### Useful commands for getting information about Pods
-
-**k get po**:	List all Pods in the current namespace <br>
-**k get po <pod name> -o wide**:  Get more details about the Pod (node, IP, etc.) <br>
-**k describe po <pod name>**:	Detailed info about the Pod (events, conditions, etc.) <br>
-**k get po <pod name> -o yaml**:	Get full YAML manifest of the Pod <br>
-**k logs po <pod name>**:  Get logs from the Pod's main container <br>
-**k logs po <pod name> -c <container name>**:  Get logs from a specific container in the Pod <br>
-
-### Multi-container Pod design patterns (e.g. sidecar, init and others)
-
-If there are multiple containers in a Pod?
-They:
-* Run on the same node
-* Share the same IP address
-* Can talk to each other using localhost
-* Can share storage/volumes
-* Are co-located and scheduled together
-
-This is great for helper containers, like:
-
-* A web server + a log collector
-* A main app + a sidecar
-
-In Kubernetes, a Pod is the smallest deployable unit and can host one or more containers that:
-
-You use multi-container Pods when containers need to work closely together, often in tightly-coupled roles.
-
-#### 1. Sidecar Pattern
-**Purpose**: Add capabilities to the main container <br>
-**Typical Use Case**: Log shipping, proxying, configuration reloaders <br>
-**Example**: A web server (main container) + a Fluentd container (sidecar) to forward logs.
-
-```yaml
-containers:
-- name: app
-  image: my-app
-- name: fluentd
-  image: fluentd
-  volumeMounts:
-  - name: logs
-    mountPath: /var/log/app
-```
-
-#### 2. Init Container Pattern
-**Purpose**: Run setup logic before main containers start <br>
-**Typical Use Case**: Downloading code, waiting for dependencies, setting up databases <br>
-**Key Feature**: They always run sequentially and must complete successfully before main containers start.
-
-```yaml
-initContainers:
-- name: init-db
-  image: busybox
-  command: ['sh', '-c', 'until nc -z db 5432; do sleep 2; done']
-```
-
-Lets have a look what documentation examples show regarding the topic:
-* [PODs in general](https://kubernetes.io/docs/concepts/workloads/pods/)
-* [init containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
-* [sidecar containers](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/)
-
-In the exam, there is a high chance that you will need to create a workload resource (like Deployment, DaemonSet, or CronJob) that uses multi-container Pods. You will need to understand how to define the containers, their images, and how they interact with each other. This is something you cannot do just with the `kubectl run` command, as it is not suitable for creating complex resources with multiple containers.
-
-Instead, you will need to use the `kubectl create` / `kubectl apply` command with help of the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>` or just by tweaking the YAML copied from the docs.
-
-### TASK! (#5)
-
-Create a Pod with Init, Main, and Sidecar Containers 
-
-1. Init Container
-Container name: waiter
-Image: busybox
-Command: Simulate a wait using: ['sh', '-c', 'echo "Initializing..." && sleep 5'] 
-
-2. Main Container
-Name: president
-Image: nginx
-
-3. Sidecar Container
-Name: heartbeat
-Image: busybox
-Command: Print a heartbeat message every 10 seconds: ['sh', '-c', 'while true; do echo "Im still alive $(date), time to go to bed for 10 seconds!"; sleep 10; done']
-
-Time CAP: 5 minutes
-
-Hint: Kubernetes docs is your friend. Try to find a similar example and change the values appropriately. Ideally search for it yourself to get used to navigating the site, otherwise if struggling, for example [Example application](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/#sidecar-example) from the Sidecar Containers section could be a good base.
-
-Stuck on the way? No worries, you can check the solution in the [./task1_5/solution1_5.md](./task1_5/solution.md) file.
 
 ## Wrap up
 Congratulations on completing the first session of the Study Buddies series!
@@ -465,9 +354,7 @@ Congratulations on completing the first session of the Study Buddies series!
 Today, we have learned:
 * Basics of VIM shortcuts and how to use them effectively
 * How to build and run Docker images
-* How to create and manage Pods in Kubernetes, including multi-container Pods with sidecar and init
-* How to use imperative and declarative approaches to manage Kubernetes resources
-* How to use the Kubernetes documentation effectively to find examples and solutions
+* How to create a pod in Kubernetes using the `kubectl run` command
 * Some kubectl commands, flags and shortcuts
 
 That would be it for the first STUDYBUDDIES SESSION! 

@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy your script into the container
 COPY miaumiau.py .
-ENV IFEELLIKEA="FRISBEE"
+ENV IFEELLIKEA="coffeecup"
 
 # Run the script on container start
 CMD ["python", "miaumiau.py"]
