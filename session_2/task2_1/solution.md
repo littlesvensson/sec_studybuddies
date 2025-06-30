@@ -9,8 +9,8 @@ Labeling the namespace with `team=studybuddies`:
 ```bash
 k label ns studybuddies team=studybuddies
 ```
-Check the namespace and its labels:
+Check the namespaces and their respective labels:
 
 ```bash
-k get ns studybuddies --show-labels
+k get ns --show-labels
 ```

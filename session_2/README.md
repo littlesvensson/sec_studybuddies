@@ -1,8 +1,34 @@
-    * Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.)
-        * Utilize persistent and ephemeral volumes
+SESSION 2, 2.7.2025 
+========================
 
+## Content of the session:
 
+* Learn about Kubernetes cluster, nodes and namespaces
 
+**Application Design and Build**
+* Choose and use the right workload resource \
+  * Deployment
+  * ReplicaSet
+  * DaemonSet
+  * StatefulSet
+  * Job
+  * Cronjob
+
+**Application Observability and Maintenance**
+* Understand API deprecations
+* Implement probes and health checks
+
+**Application Deployment**
+* Understand Deployments and how to perform rolling updates
+* Implement probes and health checks
+
+**Application Environment, Configuration and Security**
+* Understand ConfigMaps
+* Understand Secrets
+
+**wrap up, homework, next steps**
+
+## Kubernetes Cluster, Nodes and Namespaces
 
 Before we will continue with the pods and their parents, let's clarify three other terms in Kubernetes: Cluster, Namespace and Node.
 
@@ -23,18 +49,19 @@ k get no -owide # list nodes with more details
 k top no # show resource usage of nodes
 ```
 
-Note: If you want to get the command k top no to work, you need to have the metrics server installed in your cluster. More info for getting this work in Kind is to be found in [metrics_server.md](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_2/metrics_server.md) file. If you will need the command during the exam, metrics server would be preinstalled for you already. 
+> Note: If you want to get the command k top no to work, you need to have the metrics server installed in your cluster. More info for > getting this work in Kind is to be found in [metrics_server.md](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_2/metrics_server.md) file. If you will need the command during the exam, metrics server would be preinstalled for you already. 
 
 #### Namespace
-A namespace is a way to divide cluster resources between multiple users. It acts like a virtual cluster within the Kubernetes cluster, helping organize and isolate resources (like pods, services, etc.) for different teams or projects.
+A namespace is a way to divide cluster resources according to a specific logic - defined by you/admin/owner of the cluster. It acts like a virtual cluster within the Kubernetes cluster, helping organize and isolate resources (like pods, services, etc.) for different teams or projects.
 
-![Kubernetes Namespaces](../assets/kubernetes_namespaces.png)
+![Kubernetes Namespaces](../assets/kubernetes_namespaces.png) <br>
 Image source: [devopssec.fr](https://www.devopssec.fr/article/environnements-ephemeres-kubernetes)
 
 Very simply said, pods deployed within one namespace cannot access resources in another namespace unless explicitly allowed. (Depending on the cluster configuration, RBAC, Network Policies, etc.). Pods deployed in the same namespace can be from various nodes, but they can communicate with each other without any issues.
 
 #### Basic commands for working with namespaces
 ```bash
+k create ns <namespace name> # create namespace
 k get ns # list namespaces
 k get ns --show-labels # list nodes with labels
 k get ns -owide # list nodes with more details
@@ -45,15 +72,52 @@ k label ns <namespace name> <label name>- # remove label from namespace
 ```
 In the exam, you will often get task in combination with a particular namespace. It is crucial not to forget to specify the namespace in your commands, otherwise you might end up creating resources in the default namespace and lose all the points for the task. 
 
+Imperatively:
+```bash
+k create deploy <deployment name> --image=<image name> --replicas=<number of replicas> -n <namespace name>
+```
+Let's see it through manifest file:
+
+```bash
+k create deploy cutedeployment --image=nginx -n studybuddies --dry-run=client -oyaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: cutedeployment
+  name: cutedeployment
+  namespace: studybuddies
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cutedeployment
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: cutedeployment
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+status: {}
+```
+
 ### TASK! (#1)
 
 - Create a namespace called `studybuddies`
 - Label the namespace with `team=studybuddies`
-- Check the namespace with `k get ns studybuddies -owide`
+- Check all namespaces and their labels `k get <resource name> --show-labels`
 
 Time CAP: 2 minutes.
 Stuck on the way? Check the solution in the [./task2_1/solution.md](./task2_1/solution.md) file.
-
 
 ## PODS PARENTS
 
@@ -98,7 +162,7 @@ k scale rs mylovelyllamaset --replicas=5 -n studybuddies
 ```
 
 ### TASK! (#2)
-- Create / apply the yaml file in the `task2_2/` folder to create a replicaset called `mylovelyllamaset` in the `studybuddies` namespace.
+- Create / apply the yaml file in the [task2_2/ folder](./task2_2/) to create a replicaset called `mylovelyllamaset` in the `studybuddies` namespace.
 - Scale the replicaset to 5 replicas using the imperative command.
 
 Time CAP: 2 minutes.
@@ -185,13 +249,17 @@ k delete ds fluentd-elasticsearch -n kube-system
 ```
 ### jobs
 
-A Job is a Kubernetes controller that manages one or more pods. It's designed for short-lived, one-time tasks. It ensures a pod runs to completion, and if the pod fails, the Job will retry it (based on backoffLimit). Once the task is complete, the Job exits successfully.
+A Job is a Kubernetes controller that is designed for short-lived, one-time tasks. It ensures a pod runs to completion, and if the pod fails, the Job will retry it (based on backoffLimit). Once the task is complete, the Job exits successfully.
 
+```bash
 kubectl create job hello --image=busybox -- echo "Hello from Kubernetes"
+```
 
+```bash
 k get job
 k describe job hello
 k get job hello -oyaml
+```
 
 Let's check a simple job from the official documentation that calculates the value of pi:
 
