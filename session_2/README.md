@@ -247,7 +247,7 @@ Delete the daemonset
 ```bash
 k delete ds fluentd-elasticsearch -n kube-system
 ```
-### jobs
+### Jobs
 
 A Job is a Kubernetes controller that is designed for short-lived, one-time tasks. It ensures a pod runs to completion, and if the pod fails, the Job will retry it (based on backoffLimit). Once the task is complete, the Job exits successfully.
 
@@ -279,15 +279,18 @@ spec:
   backoffLimit: 4
 ```
 
-### cronjobs
+### CronJobs
 
 Cronjobs are used to run jobs on a scheduled basis, similar to the cron utility in Unix/Linux systems. They allow you to specify a time-based schedule for running jobs, such as daily, weekly, or monthly. Otherwise they are basically the same as Jobs.
 
 You can create a cronjob imperatively using the `k create cronjob --image=<image name> --schedule="<schedule>"` command. For example, to create a cronjob that runs every minute and prints the current date and a message:
 
 ```bash
-k create cj thereisneverenoughof --image=busybox --schedule="* * * * *" -- /bin/sh -c "date; echo chocolate"
+k create cj almostfunny --image=busybox --schedule="* * * * *" -- /bin/sh -c "date; echo chocolate"
 ``` 
+
+k create cj almostfunny --image=curlimages/curl --schedule="*/5 * * * *" -- curl -s https://icanhazdadjoke.com/
+
 
 More options can be found in the [official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/).
 
@@ -302,7 +305,7 @@ Create a cronjob:
 Time CAP: 2 minutes.
 Stuck on the way? Check the solution in the [./task2_4/solution.md](./task2_4/solution.md) file.
 
-### statefulsets
+### StatefulSets
 
 StatefulSets are used for managing stateful applications, which require stable, unique network identifiers and persistent storage. They provide guarantees about the ordering and uniqueness of pods, making them suitable for applications like databases or distributed systems.
 
@@ -312,9 +315,7 @@ Let's check a [simple statefulset from the official documentation](https://kuber
 
 We will wait with task for a statefulset until we get to some other necessary concepts like headless service and volume claims. For now, what you need to know is that they are useful for managing stateful application and are ordered.
 
-
-
-### deployments + Understand Deployments and how to perform rolling updates
+### Deployments + Understand Deployments and how to perform rolling updates
 
 Deployments are a higher-level abstraction that manages the lifecycle of pods and replicasets. They provide features like rolling updates, rollbacks, and scaling. Deployments ensure that the desired state of the application is maintained, and they automatically handle updates to the application.
 
