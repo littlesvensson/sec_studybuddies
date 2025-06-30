@@ -147,7 +147,7 @@ Hint: Kubernetes docs is your friend. Try to find a similar example and change t
 
 Hint2: Not found any nice example? I guess a good base for the manifest can be found in the official documentation in the init containers section: [Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/#init-containers-in-use).
 
-Stuck on the way? No worries, you can check the solution in the [./task2_2/solution1_5.md](./task1_5/solution.md) file.
+Stuck on the way? No worries, you can check the solution in the [./task2_2/solution2_2.md](./task2_2/solution.md) file.
 
 ## Kubernetes Cluster, Nodes and Namespaces
 
@@ -171,6 +171,11 @@ k top no # show resource usage of nodes
 ```
 
 > Note: If you want to get the command k top no to work, you need to have the metrics server installed in your cluster. More info for > getting this work in Kind is to be found in [metrics_server.md](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_2/metrics_server.md) file. If you will need the command during the exam, metrics server would be preinstalled for you already. 
+
+### Homework(#1)
+* Install the metrics server in your local cluster. You can use the [metrics_server.md](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_2/metrics_server.md) file as a guide.
+* Check the nodes in your cluster using the `k get no` command.
+* Check the pods in your cluster using the `k get po` command.
 
 #### Namespace
 A namespace is a way to divide cluster resources according to a specific logic - defined by you/admin/owner of the cluster. It acts like a virtual cluster within the Kubernetes cluster, helping organize and isolate resources (like pods, services, etc.) for different teams or projects.
