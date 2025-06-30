@@ -259,11 +259,18 @@ When working on exercises, try to use at least some of the VIM shortcuts you lea
 
 ## PODs playground
 
-Before we start, lets ensure we have all local cluster up and running. 
+Before we start, lets ensure we have all local cluster up and running. If you don't have a local Kubernetes cluster yet, you can use [Kind](https://kind.sigs.k8s.io/) or minikube to create one. Kind is a tool for running local Kubernetes clusters using Docker container "nodes".
 
 ```bash
-kind create cluster --name studybuddies --config kind-config.yaml
+kind create cluster --name studybuddies 
 ```
+
+alternatively for minikube:
+
+```bash
+minikube start -p studybuddies
+```
+
 
 ### What the hell are pods?
 Pods are the smallest deployable units in Kubernetes and can contain one or more containers. These containers share the same network namespace and can communicate with each other using localhost.
