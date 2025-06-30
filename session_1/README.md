@@ -11,9 +11,10 @@ SESSION 1, 30.6.2025
 
 * **Application Design and Build (20%)**
     * Define, build and modify container images
-    * Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.)
+    * Understand pods
     * Understand multi-container Pod design patterns (e.g. sidecar, init and others)
-    * Utilize persistent and ephemeral volumes
+* **wrap up, homework, next steps**
+
 
 ## Concepts of the sessions in general:
 
@@ -82,6 +83,11 @@ storageclasses                    sc           storage.k8s.io/v1                
 ```
 * Imperative commands is the way to go, as you will not have time to write YAML files during the exam. This is a bit different from the real world scenarios, where gitops and YAML files are the best practice.
 * Docs are your friend, especially because of the example yaml files. During the exam, you can use the official Kubernetes documentation as well as Kubernetes blog although that one is not very useful.
+* We will work with a repo dedicated to the sessions, which will contain all the tasks, solutions, and additional resources. You can find it here: [sec_studybuddies](https://github.com/littlesvensson/sec_studybuddies/tree/main)
+
+```bash
+git clone https://github.com/littlesvensson/sec_studybuddies.git
+```
 
 ## VIM shortcuts intro
 
@@ -89,7 +95,12 @@ Vim is a powerful text editor that is often used in the Kubernetes ecosystem. Yo
 
 ### TASK! (#1)
 
-For testing the shortcuts listed below, you can use any text file you have available or if you are lazy to find somathing suitable, feel free to get the dummy one prepared for you in [./task1_1/dummy_text.yaml](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_1/task1_1/dummy_text.yaml).
+For testing the shortcuts listed below, you can use any text file you have available or if you are lazy to find somathing suitable, feel free to get the dummy one prepared for you in [./task1_1/dummy_text.yaml](./task1_1/dummy_text.yaml).
+
+```bash
+cd sec_studybuddies/session_1/task1_1
+vim dummy_text.yaml
+```
 
 ### Basic Movement: 
 **h** - left <br>
@@ -109,6 +120,10 @@ Vim is about efficiency, which means staying as close as possible to the home ro
 Need to move more words or lines at once? Use numbers before the commands: <br>
 **2w** - move 2 words forward <br>
 **3j** - move 3 lines down <br>
+
+### Moving with lines:
+**0** or **^** - beginning of the line <br>
+**$** - end of the line <br>
 
 ### Insert Mode:
  **i** - insert before the cursor <br>
@@ -173,7 +188,7 @@ GAME: [Bug Squasher](https://www.vim-hero.com/lessons/basics-review)
 
 If you win within the time cap, send a screenshot of your winning screen to the chat to share the joy with others!
 
-![Vim Success](../assets/youwon.png)
+![Vim Success](../assets/youwon.png) <br>
 Image source: [vim-hero.com](https://www.vim-hero.com/lessons/moving-with-words)
 
 
@@ -235,15 +250,21 @@ There probably won't be needed many other spacial flags for the exam. In case th
 
 ### Additional sources (#2)
 
-For additional information on Dockerfile syntax, you can refer to the [Dockerfile reference](https://docs.docker.com/reference/dockerfile/). <br>
-More on building images via [docker](https://docs.docker.com/get-started/docker-concepts/building-images/) and [podman](https://docs.podman.io/en/latest/Commands.html) can be found in their respective sections. <br>
-Dockerfile best practices can be found in the [Dockerfile best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/) documentation. <br>
+* For additional information on Dockerfile syntax, you can refer to the [Dockerfile reference](https://docs.docker.com/reference/dockerfile/). <br>
+* More on building images via [docker](https://docs.docker.com/get-started/docker-concepts/building-images/) and [podman](https://docs.podman.io/en/latest/Commands.html) can be found in their respective sections. <br>
+* Dockerfile best practices can be found in the [Dockerfile best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/) documentation. <br>
 
 ### Homework! (#1) 
 Killercoda will be your friend through the whole (not only) CKAD journey. Feel free to explore the scenarios dediacated to the [Dockerfile and image building.](https://killercoda.com/scenarios/dockerfile) <br>
 When working on exercises, try to use at least some of the VIM shortcuts you learned in this session :)
 
 ## PODs playground
+
+Before we start, lets ensure we have all local cluster up and running. 
+
+```bash
+kind create cluster --name studybuddies --config kind-config.yaml
+```
 
 ### What the hell are pods?
 Pods are the smallest deployable units in Kubernetes and can contain one or more containers. These containers share the same network namespace and can communicate with each other using localhost.
@@ -320,32 +341,34 @@ Create and run a temporary Kubernetes pod that:
 * Launches in **interactive mode**
 * Removes itself up automatically after exit (no leftover pod)
 
-Time CAP: 5 minutes
+When done successfully, send a screenshot of your cat to the chat to share the joy with others!
 
-Stuck on the way? Use the command from [this file](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_1/task1_3/solution.md) as a reference.
+Time CAP: 3 minutes
+
+Stuck on the way? Use the command from [this file](./task1_3/solution.md) as a reference.
 
 #### Editing the resource - live and from yaml
 If you want to edit a resource, you can use the `k edit` command. This will open the resource in your default editor (usually Vim or Nano) and allow you to make changes directly.
 
 ```bash
-k edit <<resource type>> <<pod name>>
+k edit <resource type> <pod name> 
 ```
 
 When editing resources like this, it is necessary to delete some fields that are not editable, such as `status`, `metadata.creationTimestamp`, and `metadata.resourceVersion`. If you don't delete these fields, the command will fail with an error message. With pods it is not so easy, they are kind of immutable, so you will need to delete the pod and create a new one with the updated configuration otherwise you will get error. Luckily we have also declarative approach, which is more suitable for editing resources.
 
 ### Imperative vs declarative approach
 
-During the exam, you will mostly use the imperative approach, which means you will use commands to create and manage resources directly. This is different from the declarative approach, where you define resources in YAML files and apply them using `kubectl apply`. Often, you will need to use the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>`.
+During the exam, you will mostly use the imperative approach, which means you will use commands to create and manage resources directly. This is different from the declarative approach, where you define resources in YAML files and apply them using `kubectl apply`. Often, you will need to use the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>`. Or you will get the yaml manifest of the resource you want to edit by `k get <resource type> <<resource name>> -o yaml > <name your file to edit>.yaml` and then edit it in your favorite editor (e.g. Vim) and apply it using `kubectl apply -f <file name>.yaml`.
 
 ### TASK! (#4)
 * create a pod with name 'juchjuch' and image 'nginx:latest'
 * edit the pod and change the image to 'nginx:1.23'
 
-Hint: `k get <<resource type>> <<pod name>> -o yaml > <<name your file to edit>>.yaml` will give you the YAML manifest of the pod, which you can use to edit the pod. You can also use the `--dry-run=client -o yaml` option to generate the YAML manifest of the resource you are creating, tweak it a bit and then apply it using `kubectl apply -f <file.yaml>`.
+Hint: `k get <<resource type>> <<pod name>> -o yaml > <<name your file to edit>>.yaml` will give you the YAML manifest of the pod, which you can use to edit the pod. 
 
 Time CAP: 5 minutes
 
-Try to use some of the VIM shorcuts you learned in this session, such as `i` to enter insert mode, `x` to delete characters, and `dd` to delete lines.
+Try to use some of the VIM shorcuts you learned in this session, such as `i` to enter insert mode, `x` to delete characters, `dd` to delete lines...
 
 #### Useful commands for getting information about Pods
 
@@ -375,9 +398,9 @@ In Kubernetes, a Pod is the smallest deployable unit and can host one or more co
 
 You use multi-container Pods when containers need to work closely together, often in tightly-coupled roles.
 
-1. Sidecar Pattern
-**Purpose**: Add capabilities to the main container
-**Typical Use Case**: Log shipping, proxying, configuration reloaders
+#### 1. Sidecar Pattern
+**Purpose**: Add capabilities to the main container <br>
+**Typical Use Case**: Log shipping, proxying, configuration reloaders <br>
 **Example**: A web server (main container) + a Fluentd container (sidecar) to forward logs.
 
 ```yaml
@@ -391,9 +414,9 @@ containers:
     mountPath: /var/log/app
 ```
 
-2. Init Container Pattern
-**Purpose**: Run setup logic before main containers start
-**Typical Use Case**: Downloading code, waiting for dependencies, setting up databases
+#### 2. Init Container Pattern
+**Purpose**: Run setup logic before main containers start <br>
+**Typical Use Case**: Downloading code, waiting for dependencies, setting up databases <br>
 **Key Feature**: They always run sequentially and must complete successfully before main containers start.
 
 ```yaml
@@ -418,25 +441,35 @@ Create a Pod with Init, Main, and Sidecar Containers
 
 1. Init Container
 Container name: waiter
-Image: busybox:1.28
-Command: Simulate a wait using: ['sh', '-c', 'echo "Initializing..." && sleep 5']
+Image: busybox
+Command: Simulate a wait using: ['sh', '-c', 'echo "Initializing..." && sleep 5'] 
 
 2. Main Container
 Name: president
-Image: nginx:1.25
+Image: nginx
 
 3. Sidecar Container
 Name: heartbeat
 Image: busybox
-Command: Print a heartbeat message every 10 seconds: ['sh', '-c', 'while true; do echo "Sidecar alive at $(date)"; sleep 10; done']
+Command: Print a heartbeat message every 10 seconds: ['sh', '-c', 'while true; do echo "Im still alive $(date), time to go to bed for 10 seconds!"; sleep 10; done']
 
 Time CAP: 5 minutes
 
 Hint: Kubernetes docs is your friend. Try to find a similar example and change the values appropriately. Ideally search for it yourself to get used to navigating the site, otherwise if struggling, for example [Example application](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/#sidecar-example) from the Sidecar Containers section could be a good base.
 
+Stuck on the way? No worries, you can check the solution in the [./task1_5/solution1_5.md](./task1_5/solution.md) file.
 
-Stuck on the way? No worries, you can check the solution in the [./task1_5/solution1_5.md](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_1/task1_5/solution.md) file.
+## Wrap up
+Congratulations on completing the first session of the Study Buddies series!
 
+Today, we have learned:
+* Basics of VIM shortcuts and how to use them effectively
+* How to build and run Docker images
+* How to create and manage Pods in Kubernetes, including multi-container Pods with sidecar and init
+* How to use imperative and declarative approaches to manage Kubernetes resources
+* How to use the Kubernetes documentation effectively to find examples and solutions
+* Some kubectl commands, flags and shortcuts
 
 That would be it for the first STUDYBUDDIES SESSION! 
+
 I hope you enjoyed it, please let me know your feedback and any improvement suggestions, this should help us all with preparation and the right feedback would make this serie more efficient.

@@ -13,7 +13,6 @@ and the image used by the Pod:
 ```bash
 k describe po juchjuch
 ```
-
 or
 
 ```bash

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: president
+  labels:
+    app.kubernetes.io/name: president
+spec:
+  containers:
+  - name: president
+    image: nginx
+  - name: heartbeat
+    image: busybox
+    command: ['sh', '-c', 'while true; do echo "Im still alive $(date), time to go to bed for 10 seconds!"; sleep 10; done']
+  initContainers:
+  - name: waiter
+    image: busybox
+    command: ['sh', '-c', 'echo "Initializing..." && sleep 5'] 

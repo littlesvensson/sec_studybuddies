@@ -1,3 +1,9 @@
+    * Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.)
+        * Utilize persistent and ephemeral volumes
+
+
+
+
 Before we will continue with the pods and their parents, let's clarify three other terms in Kubernetes: Cluster, Namespace and Node.
 
 #### Cluster
