@@ -12,7 +12,6 @@ SESSION 1, 30.6.2025
 * **Application Design and Build (20%)**
     * Define, build and modify container images
     * Understand pods
-    * Understand multi-container Pod design patterns (e.g. sidecar, init and others)
 * **wrap up, homework, next steps**
 
 
