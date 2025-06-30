@@ -174,6 +174,8 @@ GAME: [Bug Squasher](https://www.vim-hero.com/lessons/basics-review)
 If you win within the time cap, send a screenshot of your winning screen to the chat to share the joy with others!
 
 ![Vim Success](../assets/youwon.png)
+Image source: [vim-hero.com](https://www.vim-hero.com/lessons/moving-with-words)
+
 
 ### Additional sources (#1)
 * Vimtutor - just write 'vimtutor' in your terminal
