@@ -643,59 +643,31 @@ kubectl create configmap my-config --from-env-file=path/to/foo.env --from-env-fi
 ### TASK! (#7)
 
 Create two configmaps:
-1. `holyConfig` with two key-value pairs: `BESTCHAPTERINTHEWORLD=security` 
-2. `holyConfig2` from a file `config.txt` within the [task2_7/](./task2_7/) folder. 
+1. `holyconfig` with two key-value pairs: `BESTCHAPTERINTHEWORLD=security` 
+2. `holyconfig2` from a file `config.txt` within the [task2_7/](./task2_7/) folder. 
 
 #### How to use ConfigMaps in Pods
-You can use ConfigMaps in your pods by mounting them as volumes or using them as environment variables.
+You can use ConfigMaps in your pods by mounting them as volumes or using them as environment variables. <br>
+Mounting ConfigMaps as volumes in Kubernetes means making the data stored in a ConfigMap available to a container as files inside the container's filesystem. <br>
+We will get to the volumes in one of the following sessions.
 
-Example with both methods:
+```bash
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: configmap-demo-pod
-spec:
-  containers:
-    - name: demo
-      image: alpine
-      command: ["sleep", "3600"]
-      env:
-        # Define the environment variable
-        - name: PLAYER_INITIAL_LIVES # Notice that the case is different here
-                                     # from the key name in the ConfigMap.
-          valueFrom:
-            configMapKeyRef:
-              name: game-demo           # The ConfigMap this value comes from.
-              key: player_initial_lives # The key to fetch.
-        - name: UI_PROPERTIES_FILE_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: game-demo
-              key: ui_properties_file_name
-      volumeMounts:
-      - name: config
-        mountPath: "/config"
-        readOnly: true
-  volumes:
-  # You set volumes at the Pod level, then mount them into containers inside that Pod
-  - name: config
-    configMap:
-      # Provide the name of the ConfigMap you want to mount.
-      name: game-demo
-      # An array of keys from the ConfigMap to create as files
-      items:
-      - key: "game.properties"
-        path: "game.properties"
-      - key: "user-interface.properties"
-        path: "user-interface.properties"
-```
+Let's check an example with both methods from the official documentation
+
+
 ### TASK! (#8)
 
-Create a deployment with 3 replicas within the studybuddies namespace with the name `configmap-task` that uses the `holyConfig` ConfigMap as an environment variable and mounts the `holyConfig2` ConfigMap as a volume at `/config`.
+Create a deployment with 3 replicas within the studybuddies namespace with the name `nostalgic` that uses the `BESTCHAPTERINTHEWORLD` value from the `holyconfig` ConfigMap as an environment variable. 
+- deployment name: nostalgic
+- replicas: 3
+- namespace: studybuddies
+- image: busybox
+- command: `sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"`
+- environment variable: `BESTCHAPTERINTHEWORLD` from the `holyConfig` ConfigMap
+- volume mount: `/config` from the `holyConfig2` ConfigMap
 
-Hint: You can design the deployment imperatively using the `k create deploy <name of deployment> --replicas=<number of replicas>` command, but with the `--dry-run=client -o yaml` flags to generate the YAML manifest. Then you can edit the manifest and apply it.
+Hint: You can design the deployment imperatively using the `k create deploy <name of deployment> -n <namespace name> --replicas=<number of replicas>` -- 'sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"' command, but with the `--dry-run=client -o yaml` flags to generate the YAML manifest. Then you can edit the manifest (add env from configmap) and apply it.
 
 Time CAP: 5 minutes.
 
@@ -709,6 +681,27 @@ Secrets are used to store sensitive information, such as passwords, tokens, or S
 
 
 
+## Wrap up
+Congratulations on completing the second session of the Study Buddies series!
+
+Today, we have learned:
+* Imperative vs declarative approaches in Kubernetes
+* Multi-container Pods and design patterns like sidecar and init containers
+* Basic concepts of Kubernetes, including clusters, nodes, and namespaces
+* Different workload resources in Kubernetes, such as Deployments, ReplicaSets, DaemonSets, StatefulSets, Jobs, and CronJobs
+* How to perform rolling updates and manage application deployments
+* ConfigMaps and Secrets for managing configuration and sensitive data
+* How to use probes and health checks to ensure the reliability of your applications
+
+
+I truly hope this session gave you some knowledge and inspiration. Please let me know your feedback and any improvement suggestions, this should help us all with preparation and the right feedback would make this serie more efficient.
+
+
+
+## TODO
+- Add homework for the session
+- Secrets
+- explanation for creating configmaps types in command line
 
 
 
