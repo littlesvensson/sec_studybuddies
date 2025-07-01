@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  creationTimestamp: null
+  name: iscreamfor
+spec:
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      name: iscreamfor
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - echo icecream
+            image: busybox
+            name: iscreamfor
+            resources: {}
+          restartPolicy: OnFailure
+  schedule: '* * * * *'
+status: {}

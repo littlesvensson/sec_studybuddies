@@ -1,7 +1,7 @@
 We will export the manifest with the help of the `--dry-run=client -oyaml` option:
 
 ```bash
-k run juchjuch --image=busybox --dry-run=client -oyaml -- curl -s https://icanhazdadjoke.com/ > juchjuch.yaml
+k run almostfunny --image=busybox --dry-run=client -oyaml -- curl -s https://icanhazdadjoke.com/ > juchjuch.yaml
 
 ```
 
@@ -13,8 +13,8 @@ kind: Pod
 metadata:
   creationTimestamp: null
   labels:
-    run: juchjuch
-  name: juchjuch
+    run: almostfunny
+  name: almostfunny
 spec:
   containers:
   - args:
@@ -22,16 +22,16 @@ spec:
     - -s
     - https://icanhazdadjoke.com/
     image: busybox
-    name: juchjuch
+    name: almostfunny
     resources: {}
   dnsPolicy: ClusterFirst
   restartPolicy: Always
 status: {}
 ```
-Now we can edit the manifest in Vim. Open the file `juchjuch.yaml` (or whatever name you chose) in Vim:
+Now we can edit the manifest in Vim. Open the file `almostfunny.yaml` (or whatever name you chose) in Vim:
 
 ```bash
-vim juchjuch.yaml
+vim almostfunny.yaml
 ```
 and edit the image to `curlimages/curl`. You can do this by navigating to the line with the image and changing it. In Vim, you can press `i` to enter insert mode, make your changes, and then press `Esc` to exit insert mode. Finally, save and exit Vim by typing `:x`.
 
@@ -41,8 +41,8 @@ kind: Pod
 metadata:
   creationTimestamp: null
   labels:
-    run: juchjuch
-  name: juchjuch
+    run: almostfunny
+  name: almostfunny
 spec:
   containers:
   - args:
@@ -50,7 +50,7 @@ spec:
     - -s
     - https://icanhazdadjoke.com/
     image: curlimages/curl # Changed from busybox to curlimages/curl
-    name: juchjuch
+    name: almostfunny
     resources: {}
   dnsPolicy: ClusterFirst
   restartPolicy: Always
@@ -60,17 +60,17 @@ status: {}
 and then apply it:
 
 ```bash
-k apply -f juchjuch.yaml
+k apply -f almostfunny.yaml
 ```
 
 We can check the pod with:
 
 ```bash
-k get po juchjuch
+k get po almostfunny
 ```
 
 The log of the pod will show you a dad joke:
 
 ```bash
-k logs juchjuch
+k logs almostfunny
 ```

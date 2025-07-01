@@ -53,7 +53,7 @@ In the above case, applying the dry run manifest will create the same pod as the
 You can get a yaml file also from an existing resource with `k get <resource type> <<resource name>> -o yaml > <name your file to edit>.yaml` and then edit it in your favorite editor (e.g. Vim) and apply it using `kubectl apply -f <file name>.yaml`.
 
 ### TASK! (#1)
-* Export a manifest for pod with name 'almostfunny', image 'busybox' and command `curl -s https://icanhazdadjoke.com/` with help of `--dry-run=client -oyaml` and save the manifest to a file called 'juchjuch.yaml'
+* Export a manifest for pod with name 'almostfunny', image 'busybox' and command `curl -s https://icanhazdadjoke.com/` with help of `--dry-run=client -oyaml` and save the manifest to a file called 'almostfunny.yaml'
 * Oh no! The manifest has wrong image in it. Edit the pod's manifest in *VIM* and change the image to 'curlimages/curl'
 * Create the pod using the edited manifest file
 * Check the logs of the pod with `k logs almostfunny` and paste you joke into the chat. Let's see if at least one of them will be funny
@@ -128,21 +128,21 @@ Instead, you will need to use the `kubectl create` / `kubectl apply` command wit
 
 Create a Pod with Init, Main, and Sidecar Containers. You can use Kubernetes documentation or/and `--dry-run=client -o yaml` + adjust values to create the manifest. 
 
-1. Init Container
-Container name: waiter
-Image: busybox
-Command: Simulate a wait using: ['sh', '-c', 'echo "Initializing..." && sleep 5'] 
+##### 1. Init Container
+**Container name**: waiter <br>
+**Image**: busybox <br>
+**Command**: Simulate a wait using: ['sh', '-c', 'echo "Initializing..." && sleep 5'] <br>
 
-2. Main Container (also pod name)
-Name: president
-Image: nginx
+##### 2. Main Container (also pod name)
+**Name**: president <br>
+**Image**: nginx <br>
 
-3. Sidecar Container
-Name: heartbeat
-Image: busybox
-Command: Print a heartbeat message every 10 seconds: ['sh', '-c', 'while true; do echo "Im still alive $(date), time to go to bed for 10 seconds!"; sleep 10; done']
+##### 3. Sidecar Container
+**Name**: heartbeat <br>
+**Image**: busybox <br>
+**Command**: Print a heartbeat message every 10 seconds: ['sh', '-c', 'while true; do echo "Im still alive $(date), time to go to bed for 10 seconds!"; sleep 10; done'] <br>
 
-*Do the file changes in VIM.*
+*Do the file changes in VIM.* Once done, write "I am happy" to the chat. Or you can say it to the micropohone :)
 
 Time CAP: 4 minutes
 
@@ -157,7 +157,7 @@ Stuck on the way? No worries, you can check the solution in the [./task2_2/solut
 Before we will continue with the pods and their parents, let's clarify three other terms in Kubernetes: Cluster, Namespace and Node.
 
 #### Cluster
-A cluster is a set of nodes (machines) that run containerized applications. It consists of a control plane that manages the cluster and worker nodes that run the applications. The control plane makes decisions about the cluster, such as scheduling applications, maintaining their desired state, scaling them up or down, and rolling out updates.
+A cluster is a set of nodes (machines) that run containerized applications. Or basically its a playground you get access to from the CAAS team where you can do some Kubernetes magic. It consists of a control plane that manages the cluster and worker nodes that run the applications. The control plane makes decisions about the cluster, such as scheduling applications, maintaining their desired state, scaling them up or down, and rolling out updates.
 
 #### Node 
 A node is a physical or virtual machine that runs your application workloads. It is part of the Kubernetes cluster and hosts pods, which are the smallest deployable units in Kubernetes.
@@ -173,12 +173,12 @@ k get no -owide # list nodes with more details
 k top no # show resource usage of nodes
 ```
 
-> Note: If you want to get the command k top no to work, you need to have the metrics server installed in your cluster. More info for > getting this work in Kind is to be found in [metrics_server.md](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_2/metrics_server.md) file. If you will need the command during the exam, metrics server would be preinstalled for you already. 
+> Note: If you want to get the command k top no to work, you need to have the metrics server installed in your cluster otherwise you will get an error message `error: Metrics API not available`. More info for getting this work in Kind and Minikube is to be found in [metrics_server.md](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_2/metrics_server.md) file. If you will need the command during the exam, metrics server would be preinstalled for you already. 
 
 ### Homework(#1)
 * Install the metrics server in your local cluster. You can use the [metrics_server.md](https://github.com/littlesvensson/sec_studybuddies/blob/main/session_2/metrics_server.md) file as a guide.
-* Check the nodes in your cluster using the `k get no` command.
-* Check the pods in your cluster using the `k get po` command.
+* Check the CPU and memory of nodes in your cluster using the `k top no` command.
+* Check the CPU and memory of all pods in your cluster using the `k top po` command.
 
 #### Namespace
 A namespace is a way to divide cluster resources according to a specific logic - defined by you/admin/owner of the cluster. It acts like a virtual cluster within the Kubernetes cluster, helping organize and isolate resources (like pods, services, etc.) for different teams or projects.
@@ -239,14 +239,14 @@ spec:
 status: {}
 ```
 
-### TASK! (#1)
+### TASK! (#3)
 
 - Create a namespace called `studybuddies`
 - Label the namespace with `team=studybuddies`
 - Check all namespaces and their labels `k get <resource name> --show-labels`
 
 Time CAP: 2 minutes.
-Stuck on the way? Check the solution in the [./task2_1/solution.md](./task2_1/solution.md) file.
+Stuck on the way? Check the solution in the [./task2_3/solution.md](./task2_3/solution.md) file.
 
 ## PODS PARENTS
 
@@ -290,12 +290,12 @@ We cannot create replicaset imperatively using `k create rs...`, but we can scal
 k scale rs mylovelyllamaset --replicas=5 -n studybuddies
 ```
 
-### TASK! (#2)
-- Create / apply the yaml file in the [task2_2/ folder](./task2_2/) to create a replicaset called `mylovelyllamaset` in the `studybuddies` namespace.
-- Scale the replicaset to 5 replicas using the imperative command.
+### TASK! (#4)
+- Create / apply the yaml file in the [task2_4/ folder](./task2_4/) to create a replicaset called `mylovelyllamaset` in the `studybuddies` namespace.
+- Scale the replicaset to 5 replicas using **imperative** approach (with command).
 
 Time CAP: 2 minutes.
-Stuck on the way? Check the solution in the [./task2_2/solution.md](./task2_2/solution.md) file.
+Stuck on the way? Check the solution in the [./task2_4/solution.md](./task2_4/solution.md) file.
 
 ### Daemonsets
 
@@ -303,7 +303,7 @@ Daemonsets ensure that a copy of a specific pod is running on all (or a subset o
 
 > Note: Daemonset cannot be created imperatively. But can be deleted, edited..
 
-### TASK! (#3)
+### TASK! (#5, together)
 
 Let's try to apply the [Daemonset from the docs example](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#create-a-daemonset).
 
@@ -367,7 +367,7 @@ k apply -f ds.yaml
 
 Check the pods in all namespaces:
 ```
-k get po -A
+k get po -A -owide | grep fluentd-elasticsearch
 ```
 The pods will be created on all nodes (each pod in different node), and all of them will be within the kube-system namespace.
 
@@ -408,6 +408,8 @@ spec:
   backoffLimit: 4
 ```
 
+> Note: Jobs and their pods will be listed also after they are completed unless you either delete them or define .spec.ttlSecondsAfterFinished in the manifest related to the job. In that case the job and its pods will be deleted automatically after the specified time in seconds.
+
 ### CronJobs
 
 Cronjobs are used to run jobs on a scheduled basis, similar to the cron utility in Unix/Linux systems. They allow you to specify a time-based schedule for running jobs, such as daily, weekly, or monthly. Otherwise they are basically the same as Jobs.
@@ -415,24 +417,59 @@ Cronjobs are used to run jobs on a scheduled basis, similar to the cron utility 
 You can create a cronjob imperatively using the `k create cronjob --image=<image name> --schedule="<schedule>"` command. For example, to create a cronjob that runs every minute and prints the current date and a message:
 
 ```bash
-k create cj almostfunny --image=busybox --schedule="* * * * *" -- /bin/sh -c "date; echo chocolate"
+k create cj iscreamfor --image=busybox --schedule="* * * * *" -- /bin/sh -c "echo icecream"
 ``` 
+Need to adjust details? Save as yaml file, edit what you need and apply it:
+```bash
+k create cj iscreamfor --image=busybox --schedule="* * * * *" --dry-run=client -oyaml > cj.yaml -- /bin/sh -c "echo icecream"
+```
 
-k create cj almostfunny --image=curlimages/curl --schedule="*/5 * * * *" -- curl -s https://icanhazdadjoke.com/
+```bash
+cat cj.yaml
+```
 
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  creationTimestamp: null
+  name: iscreamfor
+spec:
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      name: iscreamfor
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - echo icecream
+            image: busybox
+            name: iscreamfor
+            resources: {}
+          restartPolicy: OnFailure
+  schedule: '* * * * *'
+status: {}
+```
 
-More options can be found in the [official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/).
+More options including cron syntax can be found in the [official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/).
 
-### TASK! (#4)
+### TASK! (#6)
 
 Create a cronjob:
-- name of the cronjob: almostfunny
+- name of the cronjob: fortuneteller
 - name of image: curlimages/curl
 - should run every 5 minutes
-- command: `curl -s https://icanhazdadjoke.com/`
+- command: `curl https://helloacm.com/api/fortune/
 
-Time CAP: 2 minutes.
-Stuck on the way? Check the solution in the [./task2_4/solution.md](./task2_4/solution.md) file.
+Time CAP: 3 minutes.
+
+Stuck on the way? Check the solution in the [./task2_6/solution.md](./task2_6/solution.md) file.
 
 ### StatefulSets
 

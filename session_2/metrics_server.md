@@ -4,7 +4,7 @@ Metrics server can be install through the following manifest:
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 ```
 
-Sometimes in kind or other local clusters, the metrics-server needs extra flags due to certificate issues. You may need to edit the deployment like this:
+The metrics-server needs extra flags due to certificate issues. You may need to edit the deployment like this:
 
 ```bash
  k edit deploy -n kube-system metrics-server
@@ -14,5 +14,5 @@ Sometimes in kind or other local clusters, the metrics-server needs extra flags 
 containers:
 - name: metrics-server
   args:
-    - --kubelet-insecure-tls
+    - --kubelet-insecure-tls # Add this line as one of arguments to the metrics-server container
 ``` 

@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
   name: mylovelyllamaset
-  namespace: studybuddies
 spec:
   replicas: 3
   selector:
