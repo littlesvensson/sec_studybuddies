@@ -53,13 +53,12 @@ In the above case, applying the dry run manifest will create the same pod as the
 You can get a yaml file also from an existing resource with `k get <resource type> <<resource name>> -o yaml > <name your file to edit>.yaml` and then edit it in your favorite editor (e.g. Vim) and apply it using `kubectl apply -f <file name>.yaml`.
 
 ### TASK! (#1)
-* Export a manifest for pod with name 'almostfunny', image 'curlimages/curl' and command `curl -s https://icanhazdadjoke.com/` with help of `--dry-run=client -oyaml` and save the manifest to a file called 'juchjuch.yaml'
-* Edit the pod in *VIM* and change the image to 'busybox'
+* Export a manifest for pod with name 'almostfunny', image 'busybox' and command `curl -s https://icanhazdadjoke.com/` with help of `--dry-run=client -oyaml` and save the manifest to a file called 'juchjuch.yaml'
+* Oh no! The manifest has wrong image in it. Edit the pod's manifest in *VIM* and change the image to 'curlimages/curl'
 * Create the pod using the edited manifest file
+* Check the logs of the pod with `k logs almostfunny` and paste you joke into the chat. Let's see if at least one of them will be funny
 
 > Note: command always needs to go as the last one. `--dry-run=client -oyaml` needs to be before the command, otherwise it will not work.
-
-```bash
 
 Time CAP: 2 minutes
 
