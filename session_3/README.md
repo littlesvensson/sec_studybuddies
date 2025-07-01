@@ -1,4 +1,6 @@
 
+* Understand API deprecations
+
 ### Utilize persistent and ephemeral volumes
 
 ### Use built-in CLI tools to monitor Kubernetes application

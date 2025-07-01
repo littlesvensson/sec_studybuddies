@@ -15,10 +15,6 @@ SESSION 2, 2.7.2025
   * Job
   * Cronjob
 
-**Application Observability and Maintenance**
-* Implement probes and health checks
-* Understand API deprecations
-
 **Application Deployment**
 * Understand Deployments and how to perform rolling updates
 * Implement probes and health checks
