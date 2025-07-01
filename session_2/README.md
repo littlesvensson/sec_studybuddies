@@ -475,99 +475,154 @@ Stuck on the way? Check the solution in the [./task2_6/solution.md](./task2_6/so
 
 StatefulSets are used for managing stateful applications, which require stable, unique network identifiers and persistent storage. They provide guarantees about the ordering and uniqueness of pods, making them suitable for applications like databases or distributed systems.
 
-We cannot create statefulsets imperatively, but we can scale them using the `k scale sts <statefulset name> --replicas=<number of replicas>` command. Also, we can delete and edit some fields in an imperative way.
+We cannot create statefulsets imperatively, but we can scale them using the `k scale sts <statefulset name> --replicas=<number of replicas>` command. Also, we can delete and edit stateful sets.
 
 Let's check a [simple statefulset from the official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components)
 
 We will wait with task for a statefulset until we get to some other necessary concepts like headless service and volume claims. For now, what you need to know is that they are useful for managing stateful application and are ordered.
 
-### Deployments + Understand Deployments and how to perform rolling updates
+### Deployments + Rolling updates
 
 Deployments are a higher-level abstraction that manages the lifecycle of pods and replicasets. They provide features like rolling updates, rollbacks, and scaling. Deployments ensure that the desired state of the application is maintained, and they automatically handle updates to the application.
 
-#### Editing the resource - live and from yaml
-
-If you want to edit a resource, you can use the `k edit` command. This will open the resource in your default editor (usually Vim or Nano) and allow you to make changes directly.
-
-```bash
-k edit <resource type> <pod name> 
-```
-
-When editing resources like this, it is necessary to delete some fields that are not editable, such as `status`, `metadata.creationTimestamp`, and `metadata.resourceVersion`. If you don't delete these fields, the command will fail with an error message. With pods it is not so easy, they are kind of immutable, so you will need to delete the pod and create a new one with the updated configuration otherwise you will get error. Luckily we have also declarative approach, which is more suitable for editing resources.
+Under the hood, a deployment creates a replicaset that manages the pods. When you update a deployment, it creates a new replicaset with the updated pod template and gradually scales down the old replicaset while scaling up the new one. With deployments, you can perform nice rolling updates that allow you to update your application without downtime. You can also rollback to a previous version if something goes wrong.
 
 ![Deployment](../assets/deploy_rs_po.png)
 Image source: [kubernetes.io](https://kubernetes.io/docs/concepts/workloads/controllers)
 
-Basic commands connected to deployment management:
+#### Basic commands connected to deployment management:
+```bash
 k create deploy <deployment name> --image=<image name> --replicas=<number of replicas>
 k edit deploy <deployment name>
 k scale deploy <deployment name> --replicas=<number of replicas> 
-kubectl set image deployment/<name> <container name>=<new image name>
+k set image deployment/<name> <container name>=<new image name>
+
+Let's try:
+
+k create deploy importantsession --image=nginx --replicas=3 
+k get deploy --watch
+k edit deploy importantsession # change the image to busybox, save and exit
+k get po --watch
+k rollout status deploy/importantsession
+k get deploy importantsession -o yaml # check the manifest and image
+k scale deploy importantsession --replicas=5 
+k set image deploy/importantsession nginx=curlimages/curl # nginx because that is the name of the container in the deployment
+```
 
 The amazing feature of deployments is their ability to rollback through history.
+```bash
+k rollout status deploy/<deployment name> # check the status of the deployment rollout
+k rollout undo deploy/<deployment name>
+k rollout history deploy/<deployment name>
+k rollout undo deploy <deployment name> --to-revision=<revision number>"
+```
 
-kubectl rollout status deployment/<name>
-kubectl rollout undo deployment/<name>
-kubectl rollout history deployment myapp
-kubectl rollout undo deployment myapp --to-revision=2
+### TASK! (#7)
 
-### TASK! (#5)
+* Create a deployment with the following specifications:
+  - name: mylittledeploy
+  - image: nginx
+  - replicas: 3
 
-todo create deploy, edit image, scale it, undo two versions back
+* When done, scale the deployment to 5 replicas using the imperative approach
+* Change the image of the deployment to `busybox` just with command
+* Undo the last change
+
+Time CAP: 3 minutes <br>
+Stuck on the way? Check the solution in the [./task2_7/solution.md](./task2_7/solution.md) file.
 
 ### Implement probes and health checks
 
-What Are Probes?
+#### What Are Probes?
 Kubernetes uses probes to check the health of containers. These are automated checks that determine whether to:
 
-Restart the container (Liveness Probe)
-
-Send traffic to the container (Readiness Probe)
-
-Wait before running other probes (Startup Probe)
+- Restart the container (Liveness Probe)
+- Send traffic to the container (Readiness Probe)
+- Wait before running other probes (Startup Probe)
 
 #### Liveness probe
 Checks if the app is alive. If it fails, Kubernetes restarts the container.
 
-yaml
-Copy
-Edit
+```yaml
 livenessProbe:
   httpGet:
     path: /healthz
     port: 8080
   initialDelaySeconds: 5
   periodSeconds: 10
+```
 
 #### Readiness probe
 
 Checks if the app is ready to receive traffic.
 If it fails, the pod is removed from service endpoints but not restarted.
 
-yaml
-Copy
-Edit
+```yaml
 readinessProbe:
   tcpSocket:
     port: 8080
   initialDelaySeconds: 5
   periodSeconds: 10
+```
+Readiness and liveness probes can be used in parallel for the same container. Using both can ensure that traffic does not reach a container that is not ready for it, and that containers are restarted when they fail.
 
-####  Startup Probe (optional)
+####  Startup Probe 
 Used when your app takes a while to start.
 Only runs during startup, and disables liveness/readiness during that time.
 
-yaml
-Copy
-Edit
+```yaml
 startupProbe:
   exec:
     command: ["cat", "/tmp/healthy"]
   failureThreshold: 30
   periodSeconds: 5
+```
+Startup Probe tells Kubernetes when your container has finished starting up. <br>
+Until this probe succeeds:
 
-### TASK! (#6)
-Create a deployment with startup, readiness, livenessprobe. specifics: todo
+- Liveness and readiness probes are disabled
+- Kubernetes will wait patiently, even if the app is not yet responding
+
+This prevents Kubernetes from killing your container too early just because it takes a while to become ready.
+
+
+### HOMEWORK! (#1)
+
+Create a deployment with the following specifications:
+
+- *Name*: probeofmylife
+- *Namespace*: studybuddies
+- *Replicas*: 2
+- *Image*: nginxdemos/hello:0.2
+
+*Probes*:
+*StartupProbe*
+- Use a HTTP GET to /
+- *Port*: 80
+- *Delay*: Allow up to 30 seconds for the app to start
+- *FailureThreshold*: 15
+- *PeriodSeconds*: 2
+
+*ReadinessProbe*
+- Use HTTP GET to /
+- *Port*: 80
+- *InitialDelaySeconds*: 5
+- *PeriodSeconds*: 5
+
+*LivenessProbe*
+- Use HTTP GET to /
+- *Port*: 80
+- *InitialDelaySeconds*: 10
+- *PeriodSeconds*: 10
+
+Use VIM for editing the manifest file. Pay attention to indentation and syntax.
+
+Hint: Create the base with `--dry-run=client -oyaml` option to generate the YAML manifest of the deployment, edit it in VIM and apply it using `kubectl apply -f <file.yaml>`.
+Hint 2: Docs are your friend. Copy parts of the code you need for probes!
+
+Stuck on the way? Check the solution in the [./homework2_1/solution.md](./task2_1/solution.md) file.
+
+
 
 ### Configmaps
 
@@ -657,10 +712,21 @@ Stuck on the way? Check the solution in the [./task2_8/solution.md](./task2_8/so
 Secrets are used to store sensitive information, such as passwords, tokens, or SSH keys. They are similar to ConfigMaps but are designed to handle sensitive data securely. Secrets can be created from literal values, files, or directories.
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Utilize persistent and ephemeral volumes
-
-
-
 
 ### Use built-in CLI tools to monitor Kubernetes application
 
