@@ -1,4 +1,4 @@
-SESSION 2, 2.7.2025 
+SESSION 2, 3.7.2025 
 ========================
 
 ## Content of the session:
