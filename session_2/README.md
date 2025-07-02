@@ -619,26 +619,31 @@ Hint 2: Docs are your friend. Copy parts of the code you need for probes!
 Stuck on the way? Check the solution in the [./homework2_1/solution.md](./task2_1/solution.md) file.
 
 
-
 ### Configmaps
 
 ConfigMaps are used to store non-sensitive configuration data in key-value pairs. They allow you to decouple configuration from application code, making it easier to manage and update configurations without changing the application image.
 
 #### Create a ConfigMap
-You can create a ConfigMap using a YAML file or imperatively with the `kubectl create configmap` command.
+You can create a ConfigMap using a YAML file or imperatively with the `k create cm` command.
 
 ```bash
-k create configmap my-config --from-literal=key1=value1 --from-literal=key2=value2
+k create configmap <configmap name> --from-literal=key1=value1 --from-literal=key2=value2
 ``` 
+
 ```bash
-  kubectl create configmap my-config --from-env-file=path/to/foo.env --from-env-file=path/to/bar.env
+  kubectl create configmap <configmap name> --from-env-file=path/to/foo.env --from-env-file=path/to/bar.env
 ```
+If you use env-file, the keys within the file will be the names of the variables in the file and the values will be the values of the variables.
+
 
 ```bash
-  kubectl create configmap my-config --from-file=key1=/path/to/bar/file1.txt --from-file=key2=/path/to/bar/file2.txt
+  kubectl create configmap <configmap name> --from-file=key1=/path/to/bar/file1.txt --from-file=key2=/path/to/bar/file2.txt
 ``` 
+In the example above, keys are directly defined.
+
 ```bash
-kubectl create configmap my-config --from-env-file=path/to/foo.env --from-env-file=path/to/bar.env``` 
+kubectl create configmap <configmap name> --from-env-file=path/to/foo.env --from-env-file=path/to/bar.env
+``` 
 
 ### TASK! (#7)
 
@@ -651,9 +656,8 @@ You can use ConfigMaps in your pods by mounting them as volumes or using them as
 Mounting ConfigMaps as volumes in Kubernetes means making the data stored in a ConfigMap available to a container as files inside the container's filesystem. <br>
 We will get to the volumes in one of the following sessions.
 
-```bash
 
-Let's check an example with both methods from the official documentation
+Let's check an example [with both methods from the official documentation](https://kubernetes.io/docs/concepts/configuration/configmap/#configmaps-and-pods)
 
 
 ### TASK! (#8)
@@ -677,9 +681,37 @@ Stuck on the way? Check the solution in the [./task2_8/solution.md](./task2_8/so
 
 ### Secrets
 
-Secrets are used to store sensitive information, such as passwords, tokens, or SSH keys. They are similar to ConfigMaps but are designed to handle sensitive data securely. Secrets can be created from literal values, files, or directories.
+Secrets are used to store sensitive information, such as passwords, tokens, or SSH keys. They are similar to ConfigMaps but are designed to handle sensitive data securely. Secrets can be created from literal values, files, or directories. They are stored base64-encoded, not encrypted by default (unless encryption-at-rest is enabled). The topic of encryption-at-rest is a topic of of CKAD exam, but you will encounter it in the CKA. For now, you need to know what secret is, how to create one and how to use it for your workloads.
 
+````bash
+k create secret -h
 
+k create secret <typeofsecret> <secret name> [--from-literal=<key>=<value>] [--from-file=<key>=<path>] [--from-env-file=<path>] [--dry-run=client -o yaml] [-n <namespace name>]
+```
+
+You can create a secret using a YAML file or imperatively with the `kubectl create secret` command.
+
+```bash
+k create secret generic moodoftheday --from-literal=ifeel=euphoric
+```
+```bash
+k create secret generic  --from-file=ssh-privatekey=/path/to/private/key 
+```
+When using from file, the file name will be used as the key in the secret. If you want to specify a different key name, you can use the `--from-file=<key>=<path>` option.
+
+```bash
+k create secret generic my-secret --from-env-file=path/to/secret.env
+``` 
+With env file, the keys within the file will be the names of the variables in the file and the values will be the values of the variables.
+
+### TASK! (#9)
+
+Create a secret in the namespace `studybuddies` with the name `mydirtysecret` that contains the following key-value pairs:
+
+- key: thebestlecturerever
+- value: jaja
+
+When finished, write to the channel "I am a pro." (If doing outside of the session, tell out loud: "I AM A PRO!")
 
 ## Wrap up
 Congratulations on completing the second session of the Study Buddies series!
