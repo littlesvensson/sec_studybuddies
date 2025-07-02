@@ -713,6 +713,17 @@ Create a secret in the namespace `studybuddies` with the name `mydirtysecret` th
 
 When finished, write to the channel "I am a pro." (If doing outside of the session, tell out loud: "I AM A PRO!")
 
+## HOMEWORK(#2)
+
+If you have not done some of the tasks during the session, you can do them at home :)
+Also, there are some additional tasks for you to practice at Killercoda CKAD section:
+- [VIM Setup](https://killercoda.com/killer-shell-ckad/scenario/vim-setup)
+- [SSH Basics](https://killercoda.com/killer-shell-ckad/scenario/ssh-basics)
+- [Configmap Access in Pods](https://killercoda.com/killer-shell-ckad/scenario/configmap-pod-access)
+- [Readiness Probe](https://killercoda.com/killer-shell-ckad/scenario/readiness-probe)
+- [Build and Run a Container](https://killercoda.com/killer-shell-ckad/scenario/container-build)
+- [Rollout Rolling](https://killercoda.com/killer-shell-ckad/scenario/rollout-rolling)
+
 ## Wrap up
 Congratulations on completing the second session of the Study Buddies series!
 
@@ -729,11 +740,6 @@ Today, we have learned:
 I truly hope this session gave you some knowledge and inspiration. Please let me know your feedback and any improvement suggestions, this should help us all with preparation and the right feedback would make this serie more efficient.
 
 
-
-## TODO
-- Add homework for the session
-- Secrets
-- explanation for creating configmaps types in command line
 
 
 
