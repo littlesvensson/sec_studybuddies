@@ -1,7 +1,7 @@
 We will export the manifest with the help of the `--dry-run=client -oyaml` option:
 
 ```bash
-k run almostfunny --image=curlimages/curl --dry-run=client -oyaml -- curl -s https://icanhazdadjoke.com/ > almostfunny.yaml
+k run almostfunny --image=busybox --dry-run=client -oyaml -- curl -s https://icanhazdadjoke.com/ > almostfunny.yaml
 
 ```
 
@@ -21,7 +21,7 @@ spec:
     - curl
     - -s
     - https://icanhazdadjoke.com/
-    image: curlimages/curl
+    image: busybox
     name: almostfunny
     resources: {}
   dnsPolicy: ClusterFirst
