@@ -3,392 +3,455 @@ SESSION 3, 4.7.2025
 
 ## Content of the session:
 
-**Application Design and Build**
-* Utilize persistent and ephemeral volumes
+* Choose and use the right workload resource (continue after replicasets)
+  * Deployment
+  * ReplicaSet
+  * DaemonSet
+  * StatefulSet
+  * Job
+  * Cronjob
+
+**Application Deployment**
+* Understand Deployments and how to perform rolling updates
+* Implement probes and health checks
 
 **Application Environment, Configuration and Security**
-* Discover and use resources that extend Kubernetes (CRD, Operators)
-* Understand requests, limits, quotas
-* Define resource requirements
-* Understand ServiceAccounts
-* Understand Application Security (SecurityContexts, Capabilities, etc.)
+* Understand ConfigMaps
+* Understand Secrets
 
-**Application Observability and Maintenance**
-* Understand API deprecations
-* Use built-in CLI tools to monitor Kubernetes application
+### Daemonsets
 
-**wrap up, homework, next steps**
+Daemonsets ensure that a copy of a specific pod is running on all (or a subset of) nodes in the cluster. They are typically used for background tasks that need to run on every node, such as logging agents or monitoring tools.
 
+> Note: Daemonset cannot be created imperatively. But can be deleted, edited..
 
-### Time for some Volume (Utilize persistent and ephemeral volumes)
+### TASK! (#5, together)
 
-In Kubernetes, volumes are storage resources that allow containers in a pod to persist data, share data, or access configuration across restarts or between containers. <br>
+Let's try to apply the [Daemonset from the docs example](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#create-a-daemonset).
 
-There are two types of volumes in Kubernetes: *ephemeral* and *persistent*. 
-
-##### Ephemeral volumes
-
-Ephemeral volumes such as emptyDir, configMap, and secret, exist only for the lifetime of a pod and are typically used for temporary data, sharing files between containers, or injecting configuration. Once your pod dies, ephemeral volume data is dead too.
-
-For a Pod that defines an `emptyDir` volume, the volume is created when the Pod is assigned to a node. As the name says, the emptyDir *volume is initially empty*. All containers in the Pod can read and write the same files in the emptyDir volume.
-
-Example of an `emptyDir` volume spec within a Pod:
+```bash
+vim ds.yaml
+```
+copy the manifest:
 
 ```yaml
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: DaemonSet
 metadata:
-  name: test-pd
+  name: fluentd-elasticsearch
+  namespace: kube-system
+  labels:
+    k8s-app: fluentd-logging
 spec:
-  containers:
-  - image: registry.k8s.io/test-webserver
-    name: test-container
-    volumeMounts:
-    - mountPath: /cache
-      name: cache-volume
-  volumes:
-  - name: cache-volume
-    emptyDir:
-      sizeLimit: 500Mi
-      medium: Memory
+  selector:
+    matchLabels:
+      name: fluentd-elasticsearch
+  template:
+    metadata:
+      labels:
+        name: fluentd-elasticsearch
+    spec:
+      tolerations:
+      # these tolerations are to have the daemonset runnable on control plane nodes
+      # remove them if your control plane nodes should not run pods
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: fluentd-elasticsearch
+        image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+      # it may be desirable to set a high priority class to ensure that a DaemonSet Pod
+      # preempts running Pods
+      # priorityClassName: important
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
 ```
-### TASK! (#1)
+Apply it:
 
-Create a deployment called log-writer with 1 replica. It should:
-
-Run a pod with two containers:
-
-A writer container using image busybox, that writes the current time to /shared/log.txt every 5 seconds.
-
-A reader container using image busybox, that prints the contents of /shared/log.txt every 5 seconds.
-
-Use an emptyDir volume named shared-logs to share data between the two containers.
-
-Use the sleep + sh -c pattern for infinite looping (since busybox doesn't have cron or tail features).
-
-Tip: Mount the shared volume at /shared in both containers.
-
-##### configMap and secret volumes
-
-Mount a configMap or secret as a file inside a container.
-
-
-```yaml
-volumes:
-  - name: config-volume
-    configMap:
-      name: mylittleconfig
-```
-```yaml
-volumes:
-  - name: secret-volume
-    secret:
-      secretName: mylittlesecret
+```bash
+k apply -f ds.yaml
 ```
 
+Check the pods in all namespaces:
+```
+k get po -A -owide | grep fluentd-elasticsearch
+```
+The pods will be created on all nodes (each pod in different node), and all of them will be within the kube-system namespace.
 
+Delete the daemonset
 
- #### Persistent volumes
- , on the other hand, are designed to retain data beyond the lifecycle of individual pods. They rely on resources like PersistentVolume (PV) and PersistentVolumeClaim (PVC) to manage durable storage, often backed by external systems like cloud block storage or NFS. By using volumes, Kubernetes decouples storage from containers, enabling stateful applications to run reliably in dynamic environments.
+```bash
+k delete ds fluentd-elasticsearch -n kube-system
+```
+### Jobs
 
-1. PersistentVolume (PV)
-Represents a piece of storage provisioned by an admin or dynamically provisioned.
+A Job is a Kubernetes controller that is designed for short-lived, one-time tasks. It ensures a pod runs to completion, and if the pod fails, the Job will retry it (based on backoffLimit). Once the task is complete, the Job exits successfully.
 
-It's cluster-wide and exists independently of pods.
+```bash
+kubectl create job hello --image=busybox -- echo "Hello from Kubernetes"
+```
 
-You typically won’t need to create PVs on the CKAD exam — focus on consuming them via PVCs.
+```bash
+k get job
+k describe job hello
+k get job hello -oyaml
+```
 
-2. PersistentVolumeClaim (PVC)
-A request for storage by a user or app.
-
-Binds to a matching PV based on:
-
-AccessModes
-
-Storage size
-
-StorageClass (optional)
-
+Let's check a simple job from the official documentation that calculates the value of pi:
 
 ```yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: mypvc
+  name: pi
 spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
+  template:
+    spec:
+      containers:
+      - name: pi
+        image: perl:5.34.0
+        command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+      restartPolicy: Never
+  backoffLimit: 4
 ```
-```yaml
-volumes:
-  - name: my-volume
-    persistentVolumeClaim:
-      claimName: mypvc
 
-volumeMounts:
-  - name: my-volume
-    mountPath: /data
+> Note: Jobs and their pods will be listed also after they are completed unless you either delete them or define .spec.ttlSecondsAfterFinished in the manifest related to the job. In that case the job and its pods will be deleted automatically after the specified time in seconds.
+
+### CronJobs
+
+Cronjobs are used to run jobs on a scheduled basis, similar to the cron utility in Unix/Linux systems. They allow you to specify a time-based schedule for running jobs, such as daily, weekly, or monthly. Otherwise they are basically the same as Jobs.
+
+You can create a cronjob imperatively using the `k create cronjob --image=<image name> --schedule="<schedule>"` command. For example, to create a cronjob that runs every minute and prints the current date and a message:
+
+```bash
+k create cj iscreamfor --image=busybox --schedule="* * * * *" -- /bin/sh -c "echo icecream"
+``` 
+Need to adjust details? Save as yaml file, edit what you need and apply it:
+```bash
+k create cj iscreamfor --image=busybox --schedule="* * * * *" --dry-run=client -oyaml > cj.yaml -- /bin/sh -c "echo icecream"
 ```
+
+```bash
+cat cj.yaml
+```
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  creationTimestamp: null
+  name: iscreamfor
+spec:
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      name: iscreamfor
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - echo icecream
+            image: busybox
+            name: iscreamfor
+            resources: {}
+          restartPolicy: OnFailure
+  schedule: '* * * * *'
+status: {}
+```
+
+More options including cron syntax can be found in the [official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/).
+
+### TASK! (#6)
+
+Create a cronjob:
+- name of the cronjob: fortuneteller
+- name of image: curlimages/curl
+- should run every 5 minutes
+- command: `curl https://helloacm.com/api/fortune/
+
+Time CAP: 3 minutes.
+
+Stuck on the way? Check the solution in the [./task2_6/solution.md](./task2_6/solution.md) file.
+
+### StatefulSets
+
+StatefulSets are used for managing stateful applications, which require stable, unique network identifiers and persistent storage. They provide guarantees about the ordering and uniqueness of pods, making them suitable for applications like databases or distributed systems.
+
+We cannot create statefulsets imperatively, but we can scale them using the `k scale sts <statefulset name> --replicas=<number of replicas>` command. Also, we can delete and edit stateful sets.
+
+Let's check a [simple statefulset from the official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components)
+
+We will wait with task for a statefulset until we get to some other necessary concepts like headless service and volume claims. For now, what you need to know is that they are useful for managing stateful application and are ordered.
+
+### Deployments + Rolling updates
+
+Deployments are a higher-level abstraction that manages the lifecycle of pods and replicasets. They provide features like rolling updates, rollbacks, and scaling. Deployments ensure that the desired state of the application is maintained, and they automatically handle updates to the application.
+
+Under the hood, a deployment creates a replicaset that manages the pods. When you update a deployment, it creates a new replicaset with the updated pod template and gradually scales down the old replicaset while scaling up the new one. With deployments, you can perform nice rolling updates that allow you to update your application without downtime. You can also rollback to a previous version if something goes wrong.
+
+![Deployment](../assets/deploy_rs_po.png)
+Image source: [kubernetes.io](https://kubernetes.io/docs/concepts/workloads/controllers)
+
+#### Basic commands connected to deployment management:
+```bash
+k create deploy <deployment name> --image=<image name> --replicas=<number of replicas>
+k edit deploy <deployment name>
+k scale deploy <deployment name> --replicas=<number of replicas> 
+k set image deployment/<name> <container name>=<new image name>
+
+Let's try:
+
+k create deploy importantsession --image=nginx --replicas=3 
+k get deploy --watch
+k edit deploy importantsession # change the image to busybox, save and exit
+k get po --watch
+k rollout status deploy/importantsession
+k get deploy importantsession -o yaml # check the manifest and image
+k scale deploy importantsession --replicas=5 
+k set image deploy/importantsession nginx=curlimages/curl # nginx because that is the name of the container in the deployment
+```
+
+The amazing feature of deployments is their ability to rollback through history.
+```bash
+k rollout status deploy/<deployment name> # check the status of the deployment rollout
+k rollout undo deploy/<deployment name>
+k rollout history deploy/<deployment name>
+k rollout undo deploy <deployment name> --to-revision=<revision number>"
+```
+
+### TASK! (#7)
+
+* Create a deployment with the following specifications:
+  - name: mylittledeploy
+  - image: nginx
+  - replicas: 3
+
+* When done, scale the deployment to 5 replicas using the imperative approach
+* Change the image of the deployment to `busybox` just with command
+* Undo the last change
+
+Time CAP: 3 minutes <br>
+Stuck on the way? Check the solution in the [./task2_7/solution.md](./task2_7/solution.md) file.
+
+### Implement probes and health checks
+
+#### What Are Probes?
+Kubernetes uses probes to check the health of containers. These are automated checks that determine whether to:
+
+- Restart the container (Liveness Probe)
+- Send traffic to the container (Readiness Probe)
+- Wait before running other probes (Startup Probe)
+
+#### Liveness probe
+Checks if the app is alive. If it fails, Kubernetes restarts the container.
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+```
+
+#### Readiness probe
+
+Checks if the app is ready to receive traffic.
+If it fails, the pod is removed from service endpoints but not restarted.
+
+```yaml
+readinessProbe:
+  tcpSocket:
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+```
+Readiness and liveness probes can be used in parallel for the same container. Using both can ensure that traffic does not reach a container that is not ready for it, and that containers are restarted when they fail.
+
+####  Startup Probe 
+Used when your app takes a while to start.
+Only runs during startup, and disables liveness/readiness during that time.
+
+```yaml
+startupProbe:
+  exec:
+    command: ["cat", "/tmp/healthy"]
+  failureThreshold: 30
+  periodSeconds: 5
+```
+Startup Probe tells Kubernetes when your container has finished starting up. <br>
+Until this probe succeeds:
+
+- Liveness and readiness probes are disabled
+- Kubernetes will wait patiently, even if the app is not yet responding
+
+This prevents Kubernetes from killing your container too early just because it takes a while to become ready.
+
 
 ### HOMEWORK! (#1)
 
-Create a new PersistentVolume named `mycoolpv` with the following specifications:
-- Access mode: ReadWriteOnce
-- Storage request: 2Gi
-- hostPath: /mnt/data
+Create a deployment with the following specifications:
 
-Then, create a PersistentVolumeClaim named `evencoolerpvc` that:
-- requests 2Gi of storage
-- uses the ReadWriteOnce access mode 
-- should not define StorageClassnaem
+- *Name*: probeofmylife
+- *Namespace*: studybuddies
+- *Replicas*: 2
+- *Image*: nginxdemos/hello:0.2
 
-The PVC should bound to PV correctly
+*Probes*:
+*StartupProbe*
+- Use a HTTP GET to /
+- *Port*: 80
+- *Delay*: Allow up to 30 seconds for the app to start
+- *FailureThreshold*: 15
+- *PeriodSeconds*: 2
 
-Finally, create a Deployment named `lookinggood` in the namespace `studybuddies` that uses the `mypvc` PersistentVolumeClaim to mount the volume at `/data` inside the container.
+*ReadinessProbe*
+- Use HTTP GET to /
+- *Port*: 80
+- *InitialDelaySeconds*: 5
+- *PeriodSeconds*: 5
 
+*LivenessProbe*
+- Use HTTP GET to /
+- *Port*: 80
+- *InitialDelaySeconds*: 10
+- *PeriodSeconds*: 10
 
-### Use built-in CLI tools to monitor Kubernetes application
+Use VIM for editing the manifest file. Pay attention to indentation and syntax.
 
-#### Inspect Pod and Deployment Health
+Hint: Create the base with `--dry-run=client -oyaml` option to generate the YAML manifest of the deployment, edit it in VIM and apply it using `kubectl apply -f <file.yaml>`.
+Hint 2: Docs are your friend. Copy parts of the code you need for probes!
 
-kubectl get pods	Pod status (Running, CrashLoopBackOff, Pending)
-kubectl describe pod <pod>	Detailed events, probe results, resource usage, restarts
-kubectl logs <pod>	Container stdout/stderr (logs)
-kubectl logs -f <pod>	Live log streaming
-kubectl get deployment	Deployment status: replicas, available, updated
-kubectl rollout status deployment <name>	Rollout progress
-kubectl get events
-
-#### Resource Usage Monitoring (requires metrics-server)
-
-kubectl top pod	Shows CPU/memory usage per pod
-kubectl top node	Shows node-level resource usage
-
-#### Debugging / Troubleshooting
-
-kubectl exec -it <pod> -- bash	Open a shell in a running container
-kubectl cp <pod>:/path /local/path	Copy files from/to a pod
-kubectl port-forward <pod> 8080:80	Access pod apps locally via port forwarding 
-
-#### Status and History Checks
-Command	What it shows
-kubectl get all	All workload resources (pods, svc, rs, etc.) in current namespace
-kubectl rollout history deployment <name>	Deployment version history
-kubectl get rs	View ReplicaSets tied to a Deployment
-kubectl get jobs / cronjobs
-
-### Understand API deprecations
-
-Kubernetes evolves fast. Older API versions are marked as deprecated, then eventually removed in later versions.
-
-If you use a deprecated API, your manifests may fail to work after a Kubernetes upgrade.
-
-How to Recognize Deprecated APIs
-Check the apiVersion: field in your YAML.
-
-# DEPRECATED (removed in 1.22)
-apiVersion: apps/v1beta1
-kind: Deployment
-
-# CORRECT (current)
-apiVersion: apps/v1
-kind: Deployment
+Stuck on the way? Check the solution in the [./homework2_1/solution.md](./task2_1/solution.md) file.
 
 
-Helpful tools/commands
-k api-resources
-kubectl explain deployment | grep VERSION
-k get events
+### Configmaps
 
-### TASK! (#2)
+ConfigMaps are used to store non-sensitive configuration data in key-value pairs. They allow you to decouple configuration from application code, making it easier to manage and update configurations without changing the application image.
 
-In the folder `session_3/task3_2`, you will find a file called `sickcronjob.yaml`. Deploy the manifest to your cluster and troubleshoot any issues that arise.
-
-Stuck on the way? Check the solution in `session_3/task3_2/solution.md`.
-
-
-## Resource management
-
-
-
-## ServiceAccounts
-
-1. Purpose
-A ServiceAccount provides an identity for a pod to interact with the Kubernetes API.
-
-Every pod uses one — default ServiceAccount if none is specified.
-
- Token Is Automatically Mounted
-Kubernetes mounts a token file inside the pod:
-
-
-/var/run/secrets/kubernetes.io/serviceaccount/token
-This token is used by the pod to authenticate to the Kubernetes API server.
-
-
-## Application Security (SecurityContexts, Capabilities, etc.)
-
-For the CKAD exam, you need to understand application-level security features — mostly how to use SecurityContexts and basic Linux capabilities within pods and containers.
-
-#### SecurityContext
-
-A SecurityContext is used to define security-related settings for pods or containers (e.g., user IDs, privilege level, filesystem settings).
-
-There are two levels:
-
-a. Pod-level SecurityContext in `spec.securityContext`
-Applies to all containers in the pod.
+#### Create a ConfigMap
+You can create a ConfigMap using a YAML file or imperatively with the `k create cm` command.
 
 ```bash
-k explain pod.spec.securityContext --recursive
-```
-
-```yaml
-KIND:       Pod
-VERSION:    v1
-
-FIELD: securityContext <PodSecurityContext>
-
-
-DESCRIPTION:
-    SecurityContext holds pod-level security attributes and common container
-    settings. Optional: Defaults to empty.  See type description for default
-    values of each field.
-    PodSecurityContext holds pod-level security attributes and common container
-    settings. Some fields are also present in container.securityContext.  Field
-    values of container.securityContext take precedence over field values of
-    PodSecurityContext.
-
-FIELDS:
-  fsGroup	<integer>
-  fsGroupChangePolicy	<string>
-  runAsGroup	<integer>
-  runAsNonRoot	<boolean>
-  runAsUser	<integer>
-  seLinuxOptions	<SELinuxOptions>
-    level	<string>
-    role	<string>
-    type	<string>
-    user	<string>
-  seccompProfile	<SeccompProfile>
-    localhostProfile	<string>
-    type	<string> -required-
-    enum: Localhost, RuntimeDefault, Unconfined
-  supplementalGroups	<[]integer>
-  sysctls	<[]Sysctl>
-    name	<string> -required-
-    value	<string> -required-
-  windowsOptions	<WindowsSecurityContextOptions>
-    gmsaCredentialSpec	<string>
-    gmsaCredentialSpecName	<string>
-    hostProcess	<boolean>
-    runAsUserName	<string>
-```
-
-b. Container-level SecurityContext in `spec.containers[].securityContext`
-Overrides pod-level for the specific container.
+k create configmap <configmap name> --from-literal=key1=value1 --from-literal=key2=value2
+``` 
 
 ```bash
-k explain pod.spec.containers.securityContext --recursive
+  kubectl create configmap <configmap name> --from-env-file=path/to/foo.env --from-env-file=path/to/bar.env
 ```
-```yaml
-KIND:       Pod
-VERSION:    v1
+If you use env-file, the keys within the file will be the names of the variables in the file and the values will be the values of the variables.
 
-FIELD: securityContext <SecurityContext>
-
-DESCRIPTION:
-    SecurityContext defines the security options the container should be run
-    with. If set, the fields of SecurityContext override the equivalent fields
-    of PodSecurityContext. More info:
-    https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-    SecurityContext holds security configuration that will be applied to a
-    container. Some fields are present in both SecurityContext and
-    PodSecurityContext.  When both are set, the values in SecurityContext take
-    precedence.
-
-FIELDS:
-  allowPrivilegeEscalation	<boolean>
-  capabilities	<Capabilities>
-    add	<[]string>
-    drop	<[]string>
-  privileged	<boolean>
-  procMount	<string>
-  readOnlyRootFilesystem	<boolean>
-  runAsGroup	<integer>
-  runAsNonRoot	<boolean>
-  runAsUser	<integer>
-  seLinuxOptions	<SELinuxOptions>
-    level	<string>
-    role	<string>
-    type	<string>
-    user	<string>
-  seccompProfile	<SeccompProfile>
-    localhostProfile	<string>
-    type	<string> -required-
-    enum: Localhost, RuntimeDefault, Unconfined
-  windowsOptions	<WindowsSecurityContextOptions>
-    gmsaCredentialSpec	<string>
-    gmsaCredentialSpecName	<string>
-    hostProcess	<boolean>
-    runAsUserName	<string>
-```
-
-In CKAD, you will most likely be instructed to set the SecurityContext either for pod or particular container with specific fields given by the task.
-
-2. Capabilities
-Linux capabilities let you drop or add fine-grained privileges.
-
-3. Privileged Mode
-Allows the container to access host-level resources (⚠ dangerous).
-
-4. Run as Non-Root
-To improve security, run containers as non-root:
-
-5. Read-only Filesystem
-Improves container immutability:
-
-For CKAD, you need to know how to set securityContext above mentioned fields (and ideally understand what they mean :) .
-
-## CRDs 
-
-A CRD (CustomResourceDefinition) extends the Kubernetes API with new resource types. It's basically a resource type similar to pods, services, deployments, etc., but defined by users or developers. Which means they are not built-in resources.
-
-It allows you to define custom objects like Cluster, AppFwAPI, AppFw, etc.
-
-Once a CRD is installed, you can use kubectl to create and manage these new resources just like built-in ones (Pods, Deployments, etc.).
-
-For CKAD, you consume CRDs — you don't create them.
 
 ```bash
-k get crd
-k get <custom resource name> 
-k explain <crd> --recursive
+  kubectl create configmap <configmap name> --from-file=key1=/path/to/bar/file1.txt --from-file=key2=/path/to/bar/file2.txt
+``` 
+In the example above, keys are directly defined.
 
-Lets try out together!
-
-At first, we will install 
 ```bash
-# Installing cert-manager CRDs
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.17.1/cert-manager.crds.yaml
-```
-Then, we can check the CRDs installed in our cluster:
+kubectl create configmap <configmap name> --from-env-file=path/to/foo.env --from-env-file=path/to/bar.env
+``` 
+
+### TASK! (#7)
+
+Create two configmaps:
+1. `holyconfig` with two key-value pairs: `BESTCHAPTERINTHEWORLD=security` 
+2. `holyconfig2` from a file `config.txt` within the [task2_7/](./task2_7/) folder. 
+
+#### How to use ConfigMaps in Pods
+You can use ConfigMaps in your pods by mounting them as volumes or using them as environment variables. <br>
+Mounting ConfigMaps as volumes in Kubernetes means making the data stored in a ConfigMap available to a container as files inside the container's filesystem. <br>
+We will get to the volumes in one of the following sessions.
+
+
+Let's check an example [with both methods from the official documentation](https://kubernetes.io/docs/concepts/configuration/configmap/#configmaps-and-pods)
+
+
+### TASK! (#8)
+
+Create a deployment with 3 replicas within the studybuddies namespace with the name `nostalgic` that uses the `BESTCHAPTERINTHEWORLD` value from the `holyconfig` ConfigMap as an environment variable. 
+- deployment name: nostalgic
+- replicas: 3
+- namespace: studybuddies
+- image: busybox
+- command: `sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"`
+- environment variable: `BESTCHAPTERINTHEWORLD` from the `holyConfig` ConfigMap
+- volume mount: `/config` from the `holyConfig2` ConfigMap
+
+Hint: You can design the deployment imperatively using the `k create deploy <name of deployment> -n <namespace name> --replicas=<number of replicas>` -- 'sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"' command, but with the `--dry-run=client -o yaml` flags to generate the YAML manifest. Then you can edit the manifest (add env from configmap) and apply it.
+
+Time CAP: 5 minutes.
+
 ```bash
-k get crd
+
+Stuck on the way? Check the solution in the [./task2_8/solution.md](./task2_8/solution.md) file.
+
+### Secrets
+
+Secrets are used to store sensitive information, such as passwords, tokens, or SSH keys. They are similar to ConfigMaps but are designed to handle sensitive data securely. Secrets can be created from literal values, files, or directories. They are stored base64-encoded, not encrypted by default (unless encryption-at-rest is enabled). The topic of encryption-at-rest is a topic of of CKAD exam, but you will encounter it in the CKA. For now, you need to know what secret is, how to create one and how to use it for your workloads.
+
+````bash
+k create secret -h
+
+k create secret <typeofsecret> <secret name> [--from-literal=<key>=<value>] [--from-file=<key>=<path>] [--from-env-file=<path>] [--dry-run=client -o yaml] [-n <namespace name>]
 ```
-Now, let's explore the `certificates` CRD:
+
+You can create a secret using a YAML file or imperatively with the `kubectl create secret` command.
+
 ```bash
-k explain certificates.cert-manager.io --recursive
+k create secret generic moodoftheday --from-literal=ifeel=euphoric
 ```
-With this command, you can see the structure and fields of the `certificates` resource defined by the cert-manager CRD. From this, you can learn how to create a certificate resource and what fields are available.
+```bash
+k create secret generic  --from-file=ssh-privatekey=/path/to/private/key 
+```
+When using from file, the file name will be used as the key in the secret. If you want to specify a different key name, you can use the `--from-file=<key>=<path>` option.
+
+```bash
+k create secret generic my-secret --from-env-file=path/to/secret.env
+``` 
+With env file, the keys within the file will be the names of the variables in the file and the values will be the values of the variables.
+
+### TASK! (#9)
+
+Create a secret in the namespace `studybuddies` with the name `mydirtysecret` that contains the following key-value pairs:
+
+- key: thebestlecturerever
+- value: jaja
+
+When finished, write to the channel "I am a pro." (If doing outside of the session, tell out loud: "I AM A PRO!")
+
+## HOMEWORK(#2)
+
+If you have not done some of the tasks during the session, you can do them at home :)
+Also, there are some additional tasks for you to practice at Killercoda CKAD section:
+- [VIM Setup](https://killercoda.com/killer-shell-ckad/scenario/vim-setup)
+- [SSH Basics](https://killercoda.com/killer-shell-ckad/scenario/ssh-basics)
+- [Configmap Access in Pods](https://killercoda.com/killer-shell-ckad/scenario/configmap-pod-access)
+- [Readiness Probe](https://killercoda.com/killer-shell-ckad/scenario/readiness-probe)
+- [Build and Run a Container](https://killercoda.com/killer-shell-ckad/scenario/container-build)
+- [Rollout Rolling](https://killercoda.com/killer-shell-ckad/scenario/rollout-rolling)
 
 
-TASK! (#6)
-Task for this topic is [waiting for you in KillerCoda](https://killercoda.com/killer-shell-ckad/scenario/crd)!
-
-https://killercoda.com/killer-shell-ckad/scenario/crd
-
-
+* Different workload resources in Kubernetes, such as Deployments, ReplicaSets, DaemonSets, StatefulSets, Jobs, and CronJobs
+* How to perform rolling updates and manage application deployments
+* ConfigMaps and Secrets for managing configuration and sensitive data
+* How to use probes and health checks to ensure the reliability of your applications
