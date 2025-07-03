@@ -205,9 +205,190 @@ k get events
 
 ### TASK! (#2)
 
+In the folder `session_3/task3_2`, you will find a file called `sickcronjob.yaml`. Deploy the manifest to your cluster and troubleshoot any issues that arise.
 
-SERVICES
-Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary)
+Stuck on the way? Check the solution in `session_3/task3_2/solution.md`.
 
+
+## Resource management
+
+
+
+## ServiceAccounts
+
+1. Purpose
+A ServiceAccount provides an identity for a pod to interact with the Kubernetes API.
+
+Every pod uses one — default ServiceAccount if none is specified.
+
+ Token Is Automatically Mounted
+Kubernetes mounts a token file inside the pod:
+
+
+/var/run/secrets/kubernetes.io/serviceaccount/token
+This token is used by the pod to authenticate to the Kubernetes API server.
+
+
+## Application Security (SecurityContexts, Capabilities, etc.)
+
+For the CKAD exam, you need to understand application-level security features — mostly how to use SecurityContexts and basic Linux capabilities within pods and containers.
+
+#### SecurityContext
+
+A SecurityContext is used to define security-related settings for pods or containers (e.g., user IDs, privilege level, filesystem settings).
+
+There are two levels:
+
+a. Pod-level SecurityContext in `spec.securityContext`
+Applies to all containers in the pod.
+
+```bash
+k explain pod.spec.securityContext --recursive
+```
+
+```yaml
+KIND:       Pod
+VERSION:    v1
+
+FIELD: securityContext <PodSecurityContext>
+
+
+DESCRIPTION:
+    SecurityContext holds pod-level security attributes and common container
+    settings. Optional: Defaults to empty.  See type description for default
+    values of each field.
+    PodSecurityContext holds pod-level security attributes and common container
+    settings. Some fields are also present in container.securityContext.  Field
+    values of container.securityContext take precedence over field values of
+    PodSecurityContext.
+
+FIELDS:
+  fsGroup	<integer>
+  fsGroupChangePolicy	<string>
+  runAsGroup	<integer>
+  runAsNonRoot	<boolean>
+  runAsUser	<integer>
+  seLinuxOptions	<SELinuxOptions>
+    level	<string>
+    role	<string>
+    type	<string>
+    user	<string>
+  seccompProfile	<SeccompProfile>
+    localhostProfile	<string>
+    type	<string> -required-
+    enum: Localhost, RuntimeDefault, Unconfined
+  supplementalGroups	<[]integer>
+  sysctls	<[]Sysctl>
+    name	<string> -required-
+    value	<string> -required-
+  windowsOptions	<WindowsSecurityContextOptions>
+    gmsaCredentialSpec	<string>
+    gmsaCredentialSpecName	<string>
+    hostProcess	<boolean>
+    runAsUserName	<string>
+```
+
+b. Container-level SecurityContext in `spec.containers[].securityContext`
+Overrides pod-level for the specific container.
+
+```bash
+k explain pod.spec.containers.securityContext --recursive
+```
+```yaml
+KIND:       Pod
+VERSION:    v1
+
+FIELD: securityContext <SecurityContext>
+
+DESCRIPTION:
+    SecurityContext defines the security options the container should be run
+    with. If set, the fields of SecurityContext override the equivalent fields
+    of PodSecurityContext. More info:
+    https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+    SecurityContext holds security configuration that will be applied to a
+    container. Some fields are present in both SecurityContext and
+    PodSecurityContext.  When both are set, the values in SecurityContext take
+    precedence.
+
+FIELDS:
+  allowPrivilegeEscalation	<boolean>
+  capabilities	<Capabilities>
+    add	<[]string>
+    drop	<[]string>
+  privileged	<boolean>
+  procMount	<string>
+  readOnlyRootFilesystem	<boolean>
+  runAsGroup	<integer>
+  runAsNonRoot	<boolean>
+  runAsUser	<integer>
+  seLinuxOptions	<SELinuxOptions>
+    level	<string>
+    role	<string>
+    type	<string>
+    user	<string>
+  seccompProfile	<SeccompProfile>
+    localhostProfile	<string>
+    type	<string> -required-
+    enum: Localhost, RuntimeDefault, Unconfined
+  windowsOptions	<WindowsSecurityContextOptions>
+    gmsaCredentialSpec	<string>
+    gmsaCredentialSpecName	<string>
+    hostProcess	<boolean>
+    runAsUserName	<string>
+```
+
+In CKAD, you will most likely be instructed to set the SecurityContext either for pod or particular container with specific fields given by the task.
+
+2. Capabilities
+Linux capabilities let you drop or add fine-grained privileges.
+
+3. Privileged Mode
+Allows the container to access host-level resources (⚠ dangerous).
+
+4. Run as Non-Root
+To improve security, run containers as non-root:
+
+5. Read-only Filesystem
+Improves container immutability:
+
+For CKAD, you need to know how to set securityContext above mentioned fields (and ideally understand what they mean :) .
+
+## CRDs 
+
+A CRD (CustomResourceDefinition) extends the Kubernetes API with new resource types. It's basically a resource type similar to pods, services, deployments, etc., but defined by users or developers. Which means they are not built-in resources.
+
+It allows you to define custom objects like Cluster, AppFwAPI, AppFw, etc.
+
+Once a CRD is installed, you can use kubectl to create and manage these new resources just like built-in ones (Pods, Deployments, etc.).
+
+For CKAD, you consume CRDs — you don't create them.
+
+```bash
+k get crd
+k get <custom resource name> 
+k explain <crd> --recursive
+
+Lets try out together!
+
+At first, we will install 
+```bash
+# Installing cert-manager CRDs
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.17.1/cert-manager.crds.yaml
+```
+Then, we can check the CRDs installed in our cluster:
+```bash
+k get crd
+```
+Now, let's explore the `certificates` CRD:
+```bash
+k explain certificates.cert-manager.io --recursive
+```
+With this command, you can see the structure and fields of the `certificates` resource defined by the cert-manager CRD. From this, you can learn how to create a certificate resource and what fields are available.
+
+
+TASK! (#6)
+Task for this topic is [waiting for you in KillerCoda](https://killercoda.com/killer-shell-ckad/scenario/crd)!
+
+https://killercoda.com/killer-shell-ckad/scenario/crd
 
 

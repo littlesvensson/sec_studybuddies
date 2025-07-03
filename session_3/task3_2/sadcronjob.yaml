@@ -1,17 +1,13 @@
 apiVersion: v1
 kind: CronJob
 metadata:
-  creationTimestamp: null
-  name: fortune
+  name: sadcronjob
 spec:
   jobTemplate:
     metadata:
-      creationTimestamp: null
-      name: fortune
+      name: sadcronjob
     spec:
       template:
-        metadata:
-          creationTimestamp: null
         spec:
           containers:
           - command:
@@ -23,4 +19,3 @@ spec:
           restartPolicy: OnFailure
   schedule: '*/5 * * * *'
 status: {}
-
