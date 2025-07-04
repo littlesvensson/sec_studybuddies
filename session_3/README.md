@@ -25,14 +25,28 @@ Daemonsets ensure that a copy of a specific pod is running on all (or a subset o
 
 > Note: Daemonset cannot be created imperatively. But can be deleted, edited..
 
-### TASK! (#5, together)
+What can you do with Daemonsets with help of kubectl?
+```bash
+k edit ds <daemonset name>
+k delete ds <daemonset name>
+k get ds <daemonset name>
+k get ds -A # get all daemonsets in all namespaces
+k get ds <daemonset name> -o yaml # get the manifest of the daemonset
+k rollout restart ds <daemonset name> # restart the daemonset
+k rollout status ds <daemonset name> # check the status of the daemonset rollout
+k describe ds <daemonset name> # describe the daemonset
+```
+Rollout restart is useful when you want to restart the daemonset pods without changing the manifest. The reason could be for example that you have updated a configmap or secret that is connected to the daemonset, so the pod needs to be restarted in order to mount to the new configmap/secret. It will trigger a rolling update of the daemonset, which will restart all pods managed by the daemonset. 
+
+
+### TASK! (#1, together)
 
 Let's try to apply the [Daemonset from the docs example](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#create-a-daemonset).
 
 ```bash
 vim ds.yaml
 ```
-copy the manifest:
+Copy the manifest:
 
 ```yaml
 apiVersion: apps/v1
@@ -93,7 +107,20 @@ k get po -A -owide | grep fluentd-elasticsearch
 ```
 The pods will be created on all nodes (each pod in different node), and all of them will be within the kube-system namespace.
 
-Delete the daemonset
+With daemonsets, as well as with statefulsets or deployments, we can use the `k rollout` command to manage the rollout of the daemonset. For example, we can restart the daemonset to apply changes or to ensure that the pods are running with the latest configuration.
+
+```bash
+k rollout restart ds -n kube-system fluentd-elasticsearch 
+```
+The default rollout strategy for daemonsets is `RollingUpdate`, which means that the pods will be updated one by one, ensuring that there is always at least one pod running on each node. At first, the pod on a node will be terminated, and then a new pod will be created on the same node. 
+
+Unlike with Deployments, which we will see in a while, DaemonSets are built on the principle of one Pod per node.
+
+```bash
+k rollout status ds fluentd-elasticsearch -n kube-system
+```
+
+Delete the DaemonSet
 
 ```bash
 k delete ds fluentd-elasticsearch -n kube-system
@@ -103,7 +130,7 @@ k delete ds fluentd-elasticsearch -n kube-system
 A Job is a Kubernetes controller that is designed for short-lived, one-time tasks. It ensures a pod runs to completion, and if the pod fails, the Job will retry it (based on backoffLimit). Once the task is complete, the Job exits successfully.
 
 ```bash
-kubectl create job hello --image=busybox -- echo "Hello from Kubernetes"
+k create job hello --image=busybox --dry-run=client -oyaml -- echo "Hello dear studybuddies"
 ```
 
 ```bash
@@ -131,6 +158,12 @@ spec:
 ```
 
 > Note: Jobs and their pods will be listed also after they are completed unless you either delete them or define .spec.ttlSecondsAfterFinished in the manifest related to the job. In that case the job and its pods will be deleted automatically after the specified time in seconds.
+
+```bash
+k explain job.spec
+k explain job.metadata --recursive
+```
+
 
 ### CronJobs
 
@@ -181,10 +214,11 @@ status: {}
 
 More options including cron syntax can be found in the [official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/).
 
-### TASK! (#6)
+### TASK! (#2)
 
 Create a cronjob:
 - name of the cronjob: fortuneteller
+- namespace: studybuddies
 - name of image: curlimages/curl
 - should run every 5 minutes
 - command: `curl https://helloacm.com/api/fortune/
@@ -218,6 +252,7 @@ k create deploy <deployment name> --image=<image name> --replicas=<number of rep
 k edit deploy <deployment name>
 k scale deploy <deployment name> --replicas=<number of replicas> 
 k set image deployment/<name> <container name>=<new image name>
+```
 
 Let's try:
 
@@ -239,7 +274,14 @@ k rollout history deploy/<deployment name>
 k rollout undo deploy <deployment name> --to-revision=<revision number>"
 ```
 
-### TASK! (#7)
+If you want to add the change of the changed-cause to the history, this is being done with the annotation:
+```yaml
+metadata:
+  annotations:
+    kubernetes.io/change-cause: "Updated image to v2.0"
+```
+
+### TASK! (#3)
 
 * Create a deployment with the following specifications:
   - name: mylittledeploy
