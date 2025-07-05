@@ -13,7 +13,7 @@ k scale deploy mylittledeploy --replicas=5
 Set the image of the deployment to `busybox`:
 
 ```bash
-k set image deploy/mylittledeploy nginx=busybox
+k set image deploy/mylittledeploy nginx=busybox # yes yes, nginx is busybox now, things are not always as they seem :)
 ```
 You can always check if the deployment works and has the proper image:
 

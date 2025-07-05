@@ -1,9 +1,14 @@
-SESSION 3, 4.7.2025 
+SESSION 4, 7.7.2025 
 ========================
 
 ## Content of the session:
 
+**Application Environment, Configuration and Security**
+* Understand ConfigMaps
+* Understand Secrets
+
 **Application Design and Build**
+* StatefulSet
 * Utilize persistent and ephemeral volumes
 
 **Application Environment, Configuration and Security**
@@ -19,6 +24,88 @@ SESSION 3, 4.7.2025
 
 **wrap up, homework, next steps**
 
+#### How to use ConfigMaps in Pods
+You can use ConfigMaps in your pods by mounting them as volumes or using them as environment variables. <br>
+Mounting ConfigMaps as volumes in Kubernetes means making the data stored in a ConfigMap available to a container as files inside the container's filesystem. <br>
+We will get to the volumes in one of the following sessions.
+
+
+Let's check an example [with both methods from the official documentation](https://kubernetes.io/docs/concepts/configuration/configmap/#configmaps-and-pods)
+
+
+### TASK! (#8)
+
+Create a deployment with 3 replicas within the studybuddies namespace with the name `nostalgic` that uses the `BESTCHAPTERINTHEWORLD` value from the `holyconfig` ConfigMap as an environment variable. 
+- deployment name: nostalgic
+- replicas: 3
+- namespace: studybuddies
+- image: busybox
+- command: `sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"`
+- environment variable: `BESTCHAPTERINTHEWORLD` from the `holyConfig` ConfigMap
+- volume mount: `/config` from the `holyConfig2` ConfigMap
+
+Hint: You can design the deployment imperatively using the `k create deploy <name of deployment> -n <namespace name> --replicas=<number of replicas>` -- 'sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"' command, but with the `--dry-run=client -o yaml` flags to generate the YAML manifest. Then you can edit the manifest (add env from configmap) and apply it.
+
+Time CAP: 5 minutes.
+
+```bash
+
+Stuck on the way? Check the solution in the [./task2_8/solution.md](./task2_8/solution.md) file.
+
+### Secrets
+
+Secrets are used to store sensitive information, such as passwords, tokens, or SSH keys. They are similar to ConfigMaps but are designed to handle sensitive data securely. Secrets can be created from literal values, files, or directories. They are stored base64-encoded, not encrypted by default (unless encryption-at-rest is enabled). The topic of encryption-at-rest is a topic of of CKAD exam, but you will encounter it in the CKA. For now, you need to know what secret is, how to create one and how to use it for your workloads.
+
+````bash
+k create secret -h
+
+k create secret <typeofsecret> <secret name> [--from-literal=<key>=<value>] [--from-file=<key>=<path>] [--from-env-file=<path>] [--dry-run=client -o yaml] [-n <namespace name>]
+```
+
+You can create a secret using a YAML file or imperatively with the `kubectl create secret` command.
+
+```bash
+k create secret generic moodoftheday --from-literal=ifeel=euphoric
+```
+```bash
+k create secret generic  --from-file=ssh-privatekey=/path/to/private/key 
+```
+When using from file, the file name will be used as the key in the secret. If you want to specify a different key name, you can use the `--from-file=<key>=<path>` option.
+
+```bash
+k create secret generic my-secret --from-env-file=path/to/secret.env
+``` 
+With env file, the keys within the file will be the names of the variables in the file and the values will be the values of the variables.
+
+### TASK! (#9)
+
+Create a secret in the namespace `studybuddies` with the name `mydirtysecret` that contains the following key-value pairs:
+
+- key: thebestlecturerever
+- value: jaja
+
+When finished, write to the channel "I am a pro." (If doing outside of the session, tell out loud: "I AM A PRO!")
+
+## HOMEWORK(#2)
+
+If you have not done some of the tasks during the session, you can do them at home :)
+Also, there are some additional tasks for you to practice at Killercoda CKAD section:
+- [VIM Setup](https://killercoda.com/killer-shell-ckad/scenario/vim-setup)
+- [SSH Basics](https://killercoda.com/killer-shell-ckad/scenario/ssh-basics)
+- [Configmap Access in Pods](https://killercoda.com/killer-shell-ckad/scenario/configmap-pod-access)
+- [Readiness Probe](https://killercoda.com/killer-shell-ckad/scenario/readiness-probe)
+- [Build and Run a Container](https://killercoda.com/killer-shell-ckad/scenario/container-build)
+- [Rollout Rolling](https://killercoda.com/killer-shell-ckad/scenario/rollout-rolling)
+
+### StatefulSets
+
+StatefulSets are used for managing stateful applications, which require stable, unique network identifiers and persistent storage. They provide guarantees about the ordering and uniqueness of pods, making them suitable for applications like databases or distributed systems.
+
+We cannot create statefulsets imperatively, but we can scale them using the `k scale sts <statefulset name> --replicas=<number of replicas>` command. Also, we can delete and edit stateful sets.
+
+Let's check a [simple statefulset from the official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components)
+
+We will wait with task for a statefulset until we get to some other necessary concepts like headless service and volume claims. For now, what you need to know is that they are useful for managing stateful application and are ordered. 
 
 ### Time for some Volume (Utilize persistent and ephemeral volumes)
 

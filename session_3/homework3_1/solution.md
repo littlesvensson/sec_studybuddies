@@ -83,3 +83,6 @@ spec:
             port: 80              # Added
           initialDelaySeconds: 10 # Added
           periodSeconds: 10       # Added
+```
+
+> Note: The `failureThreshold` is the number of consecutive failures for the probe to be considered failed. The `initialDelaySeconds` is the time to wait before starting the probe after the container has started. The `periodSeconds` is how often to perform the probe.

@@ -7,7 +7,6 @@ SESSION 3, 4.7.2025
   * Deployment
   * ReplicaSet
   * DaemonSet
-  * StatefulSet
   * Job
   * Cronjob
 
@@ -26,6 +25,7 @@ Daemonsets ensure that a copy of a specific pod is running on all (or a subset o
 > Note: Daemonset cannot be created imperatively. But can be deleted, edited..
 
 What can you do with Daemonsets with help of kubectl?
+
 ```bash
 k edit ds <daemonset name>
 k delete ds <daemonset name>
@@ -114,13 +114,15 @@ k rollout restart ds -n kube-system fluentd-elasticsearch
 ```
 The default rollout strategy for daemonsets is `RollingUpdate`, which means that the pods will be updated one by one, ensuring that there is always at least one pod running on each node. At first, the pod on a node will be terminated, and then a new pod will be created on the same node. 
 
-Unlike with Deployments, which we will see in a while, DaemonSets are built on the principle of one Pod per node.
+This is the command you can use to check the status of the rollout (if it is successful, in progress or if there are any issues):
 
 ```bash
 k rollout status ds fluentd-elasticsearch -n kube-system
 ```
 
-Delete the DaemonSet
+Unlike with Deployments, which we will see in a while, DaemonSets are built on the principle of one Pod per node. That is why we cannot scale them, as they are not designed to have multiple replicas. 
+
+Delete the DaemonSet:
 
 ```bash
 k delete ds fluentd-elasticsearch -n kube-system
@@ -137,6 +139,7 @@ k create job hello --image=busybox --dry-run=client -oyaml -- echo "Hello dear s
 k get job
 k describe job hello
 k get job hello -oyaml
+k logs job/hello # check the logs of the job - we do not have to specify the unique pod name, because the job has only one pod
 ```
 
 Let's check a simple job from the official documentation that calculates the value of pi:
@@ -153,15 +156,15 @@ spec:
       - name: pi
         image: perl:5.34.0
         command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
-      restartPolicy: Never
-  backoffLimit: 4
+      restartPolicy: Never # Usually set to Never for jobs, because we want the job to run to completion and not restart the pod if it fails - and if we set it to Always, the job will never complete.
+  backoffLimit: 4 # The number of retries before the job is considered failed. If the job fails more than this number of times, it will be marked as failed and will not be retried anymore.
 ```
 
 > Note: Jobs and their pods will be listed also after they are completed unless you either delete them or define .spec.ttlSecondsAfterFinished in the manifest related to the job. In that case the job and its pods will be deleted automatically after the specified time in seconds.
 
 ```bash
-k explain job.spec
-k explain job.metadata --recursive
+k explain job.spec # check the spec of the job with explanations
+k explain job.metadata --recursive # check the metadata of the job with all the possible fields including tree structure/yaml indentation
 ```
 
 
@@ -172,11 +175,11 @@ Cronjobs are used to run jobs on a scheduled basis, similar to the cron utility 
 You can create a cronjob imperatively using the `k create cronjob --image=<image name> --schedule="<schedule>"` command. For example, to create a cronjob that runs every minute and prints the current date and a message:
 
 ```bash
-k create cj iscreamfor --image=busybox --schedule="* * * * *" -- /bin/sh -c "echo icecream"
+k create cj iscreamfor --image=busybox --schedule="* * * * *" -- echo icecream
 ``` 
 Need to adjust details? Save as yaml file, edit what you need and apply it:
 ```bash
-k create cj iscreamfor --image=busybox --schedule="* * * * *" --dry-run=client -oyaml > cj.yaml -- /bin/sh -c "echo icecream"
+k create cj iscreamfor --image=busybox --schedule="* * * * *" --dry-run=client -oyaml > cj.yaml -- echo icecream
 ```
 
 ```bash
@@ -201,15 +204,34 @@ spec:
         spec:
           containers:
           - command:
-            - /bin/sh
-            - -c
-            - echo icecream
+            - echo
+            - icecream
             image: busybox
             name: iscreamfor
             resources: {}
           restartPolicy: OnFailure
-  schedule: '* * * * *'
+  schedule: '* */5 * * *'   # Changed to run every 5 hours
 status: {}
+
+```
+Applying the cronjob:
+
+```bash
+k apply -f cj.yaml
+```
+
+> Note: do you have a cronjob setup and want to check if it works immediately? You can use the `k create job --from=cronjob/<cronjob name>` command to create a job from the cronjob. This will run the job immediately, and you can check the logs of the job to see if it works as expected.
+
+```bash
+k create job --from=cronjob/iscreamfor
+job.batch/luxurytest created
+
+k get po 
+NAME               READY   STATUS      RESTARTS   AGE
+luxurytest-8jfbr   0/1     Completed   0          4s
+
+k logs luxurytest-8jfbr
+icecream
 ```
 
 More options including cron syntax can be found in the [official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/).
@@ -225,28 +247,19 @@ Create a cronjob:
 
 Time CAP: 3 minutes.
 
-Stuck on the way? Check the solution in the [./task2_6/solution.md](./task2_6/solution.md) file.
-
-### StatefulSets
-
-StatefulSets are used for managing stateful applications, which require stable, unique network identifiers and persistent storage. They provide guarantees about the ordering and uniqueness of pods, making them suitable for applications like databases or distributed systems.
-
-We cannot create statefulsets imperatively, but we can scale them using the `k scale sts <statefulset name> --replicas=<number of replicas>` command. Also, we can delete and edit stateful sets.
-
-Let's check a [simple statefulset from the official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components)
-
-We will wait with task for a statefulset until we get to some other necessary concepts like headless service and volume claims. For now, what you need to know is that they are useful for managing stateful application and are ordered.
+Stuck on the way? Check the solution in the [./task3_2/solution.md](./task3_2/solution.md) file.
 
 ### Deployments + Rolling updates
 
 Deployments are a higher-level abstraction that manages the lifecycle of pods and replicasets. They provide features like rolling updates, rollbacks, and scaling. Deployments ensure that the desired state of the application is maintained, and they automatically handle updates to the application.
 
-Under the hood, a deployment creates a replicaset that manages the pods. When you update a deployment, it creates a new replicaset with the updated pod template and gradually scales down the old replicaset while scaling up the new one. With deployments, you can perform nice rolling updates that allow you to update your application without downtime. You can also rollback to a previous version if something goes wrong.
+Under the hood, a deployment creates a replicaset that manages the pods. When you update a deployment, it creates a new replicaset with the updated pod template and gradually scales down the old replicaset while scaling up the new one. With deployments, you can perform nice rolling updates that allow you to update your application without downtime. You can also rollback to a previous specific version if something goes wrong.
 
 ![Deployment](../assets/deploy_rs_po.png)
 Image source: [kubernetes.io](https://kubernetes.io/docs/concepts/workloads/controllers)
 
 #### Basic commands connected to deployment management:
+
 ```bash
 k create deploy <deployment name> --image=<image name> --replicas=<number of replicas>
 k edit deploy <deployment name>
@@ -256,29 +269,63 @@ k set image deployment/<name> <container name>=<new image name>
 
 Let's try:
 
-k create deploy importantsession --image=nginx --replicas=3 
+```bash
+k create deploy importantsession --image=nginx --replicas=3 # create a deployment with 3 replicas of nginx
+deployment.apps/importantsession created
+```
+
+```bash
 k get deploy --watch
+importantsession   1/3     3            1           8s
+importantsession   2/3     3            2           9s
+importantsession   3/3     3            3           10s
+```
+
+```bash
 k edit deploy importantsession # change the image to busybox, save and exit
 k get po --watch
 k rollout status deploy/importantsession
 k get deploy importantsession -o yaml # check the manifest and image
 k scale deploy importantsession --replicas=5 
-k set image deploy/importantsession nginx=curlimages/curl # nginx because that is the name of the container in the deployment
+k set image deploy/importantsession nginx=curlimages/curl # What the hell, why nginx=curlimages/curl? Thats because originally, when we created the deployment imperatively, we chose the image as nginx. Therefore the name for the main container was added as nginx. When you set another image imperatively, you specify the name of the container and the new image. Image will be change, the name of the container will stay the same. In case you do not wish the deployment to have the original name of the container, you need to edit it in the deployment manifest.
 ```
 
 The amazing feature of deployments is their ability to rollback through history.
+
 ```bash
 k rollout status deploy/<deployment name> # check the status of the deployment rollout
-k rollout undo deploy/<deployment name>
-k rollout history deploy/<deployment name>
-k rollout undo deploy <deployment name> --to-revision=<revision number>"
+k rollout undo deploy/<deployment name> # rollback to the previous version of the deployment
+k rollout history deploy/<deployment name> # check the history versions of the deployment
+k rollout undo deploy <deployment name> --to-revision=<revision number> # rollback to a specific version of the deployment
+```
+> Tip: Don't remember during exam what the hell was the rollout command? You can always use `k rollout -h` to get the explanation of the command with possible options and clear examples.
+
+Let's see it on the example of our `importantsession` deployment:
+
+```bash
+k rollout history deploy/importantsession
+deployment.apps/importantsession
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+3         <none>
 ```
 
-If you want to add the change of the changed-cause to the history, this is being done with the annotation:
+If you want to add the change of the changed-cause to the history, the change needs to be done together with the annotation:
 ```yaml
 metadata:
   annotations:
     kubernetes.io/change-cause: "Updated image to v2.0"
+```
+alternatively, you can use the `--record` flag when creating or updating the deployment:
+```bash
+k set image deploy/importantsession nginx=curlimages/curl --record  
+
+k rollout history deploy/importantsession
+REVISION  CHANGE-CAUSE
+1         <none>
+3         <none>
+4         kubectl set image deploy/importantsession nginx=curlimages/curl --record=true
 ```
 
 ### TASK! (#3)
@@ -293,7 +340,7 @@ metadata:
 * Undo the last change
 
 Time CAP: 3 minutes <br>
-Stuck on the way? Check the solution in the [./task2_7/solution.md](./task2_7/solution.md) file.
+Stuck on the way? Check the solution in the [./task3_3/solution.md](./task3_3/solution.md) file.
 
 ### Implement probes and health checks
 
@@ -364,7 +411,7 @@ Create a deployment with the following specifications:
 - Use a HTTP GET to /
 - *Port*: 80
 - *Delay*: Allow up to 30 seconds for the app to start
-- *FailureThreshold*: 15
+- *FailureThreshold*: 15 # 
 - *PeriodSeconds*: 2
 
 *ReadinessProbe*
@@ -386,7 +433,6 @@ Hint 2: Docs are your friend. Copy parts of the code you need for probes!
 
 Stuck on the way? Check the solution in the [./homework2_1/solution.md](./task2_1/solution.md) file.
 
-
 ### Configmaps
 
 ConfigMaps are used to store non-sensitive configuration data in key-value pairs. They allow you to decouple configuration from application code, making it easier to manage and update configurations without changing the application image.
@@ -395,105 +441,42 @@ ConfigMaps are used to store non-sensitive configuration data in key-value pairs
 You can create a ConfigMap using a YAML file or imperatively with the `k create cm` command.
 
 ```bash
-k create configmap <configmap name> --from-literal=key1=value1 --from-literal=key2=value2
+k create cm <configmap name> --from-literal=key1=value1 --from-literal=key2=value2
 ``` 
+Using `--from-literal` allows you to define key-value pairs directly in the command line.
 
 ```bash
-  kubectl create configmap <configmap name> --from-env-file=path/to/foo.env --from-env-file=path/to/bar.env
+k create cm <configmap name> --from-env-file=path/to/foo.env --from-env-file=path/to/bar.env
 ```
 If you use env-file, the keys within the file will be the names of the variables in the file and the values will be the values of the variables.
 
 
 ```bash
-  kubectl create configmap <configmap name> --from-file=key1=/path/to/bar/file1.txt --from-file=key2=/path/to/bar/file2.txt
+k create cm <configmap name> --from-file=key1=/path/to/bar/file1.txt --from-file=key2=/path/to/bar/file2.txt
 ``` 
-In the example above, keys are directly defined.
+In the example above, keys are directly defined and values are read from files. If the file key name is not specified, the file name will be used as the key in the ConfigMap. Or in ohter words, if you want to specify a different key name, you can use the `--from-file=<key>=<path>` option.
 
-```bash
-kubectl create configmap <configmap name> --from-env-file=path/to/foo.env --from-env-file=path/to/bar.env
-``` 
 
 ### TASK! (#7)
 
 Create two configmaps:
 1. `holyconfig` with two key-value pairs: `BESTCHAPTERINTHEWORLD=security` 
-2. `holyconfig2` from a file `config.txt` within the [task2_7/](./task2_7/) folder. 
+2. `holyconfig2` from a file `config` within the [task3_4/](./task3_4/) folder. 
 
-#### How to use ConfigMaps in Pods
-You can use ConfigMaps in your pods by mounting them as volumes or using them as environment variables. <br>
-Mounting ConfigMaps as volumes in Kubernetes means making the data stored in a ConfigMap available to a container as files inside the container's filesystem. <br>
-We will get to the volumes in one of the following sessions.
+Once done, write to the chat a happy emoji of your choice.
 
+Time CAP: 3 minutes. <br>
+Stuck on the way? Check the solution in the [./task3_4/solution.md](./task3_4/solution.md) file.
 
-Let's check an example [with both methods from the official documentation](https://kubernetes.io/docs/concepts/configuration/configmap/#configmaps-and-pods)
+## Wrap up
+Congratulations on completing the third session of the Study Buddies series!
 
+Today, we have learned:
 
-### TASK! (#8)
-
-Create a deployment with 3 replicas within the studybuddies namespace with the name `nostalgic` that uses the `BESTCHAPTERINTHEWORLD` value from the `holyconfig` ConfigMap as an environment variable. 
-- deployment name: nostalgic
-- replicas: 3
-- namespace: studybuddies
-- image: busybox
-- command: `sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"`
-- environment variable: `BESTCHAPTERINTHEWORLD` from the `holyConfig` ConfigMap
-- volume mount: `/config` from the `holyConfig2` ConfigMap
-
-Hint: You can design the deployment imperatively using the `k create deploy <name of deployment> -n <namespace name> --replicas=<number of replicas>` -- 'sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"' command, but with the `--dry-run=client -o yaml` flags to generate the YAML manifest. Then you can edit the manifest (add env from configmap) and apply it.
-
-Time CAP: 5 minutes.
-
-```bash
-
-Stuck on the way? Check the solution in the [./task2_8/solution.md](./task2_8/solution.md) file.
-
-### Secrets
-
-Secrets are used to store sensitive information, such as passwords, tokens, or SSH keys. They are similar to ConfigMaps but are designed to handle sensitive data securely. Secrets can be created from literal values, files, or directories. They are stored base64-encoded, not encrypted by default (unless encryption-at-rest is enabled). The topic of encryption-at-rest is a topic of of CKAD exam, but you will encounter it in the CKA. For now, you need to know what secret is, how to create one and how to use it for your workloads.
-
-````bash
-k create secret -h
-
-k create secret <typeofsecret> <secret name> [--from-literal=<key>=<value>] [--from-file=<key>=<path>] [--from-env-file=<path>] [--dry-run=client -o yaml] [-n <namespace name>]
-```
-
-You can create a secret using a YAML file or imperatively with the `kubectl create secret` command.
-
-```bash
-k create secret generic moodoftheday --from-literal=ifeel=euphoric
-```
-```bash
-k create secret generic  --from-file=ssh-privatekey=/path/to/private/key 
-```
-When using from file, the file name will be used as the key in the secret. If you want to specify a different key name, you can use the `--from-file=<key>=<path>` option.
-
-```bash
-k create secret generic my-secret --from-env-file=path/to/secret.env
-``` 
-With env file, the keys within the file will be the names of the variables in the file and the values will be the values of the variables.
-
-### TASK! (#9)
-
-Create a secret in the namespace `studybuddies` with the name `mydirtysecret` that contains the following key-value pairs:
-
-- key: thebestlecturerever
-- value: jaja
-
-When finished, write to the channel "I am a pro." (If doing outside of the session, tell out loud: "I AM A PRO!")
-
-## HOMEWORK(#2)
-
-If you have not done some of the tasks during the session, you can do them at home :)
-Also, there are some additional tasks for you to practice at Killercoda CKAD section:
-- [VIM Setup](https://killercoda.com/killer-shell-ckad/scenario/vim-setup)
-- [SSH Basics](https://killercoda.com/killer-shell-ckad/scenario/ssh-basics)
-- [Configmap Access in Pods](https://killercoda.com/killer-shell-ckad/scenario/configmap-pod-access)
-- [Readiness Probe](https://killercoda.com/killer-shell-ckad/scenario/readiness-probe)
-- [Build and Run a Container](https://killercoda.com/killer-shell-ckad/scenario/container-build)
-- [Rollout Rolling](https://killercoda.com/killer-shell-ckad/scenario/rollout-rolling)
-
-
-* Different workload resources in Kubernetes, such as Deployments, ReplicaSets, DaemonSets, StatefulSets, Jobs, and CronJobs
+* Some more workload resource types in Kubernetes, such as Deployments, DaemonSets, Jobs, and CronJobs
 * How to perform rolling updates and manage application deployments
-* ConfigMaps and Secrets for managing configuration and sensitive data
 * How to use probes and health checks to ensure the reliability of your applications
+* How to create ConfigMaps by defining key-value pairs and using files
+
+I  hope this session gave you some knowledge and inspiration despite its Friday afternoon schedule. Please let me know your feedback and any improvement suggestions, this should help us all with preparation and the right feedback would make this serie more efficient.
+
