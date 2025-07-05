@@ -15,8 +15,7 @@ SESSION 3, 4.7.2025
 * Implement probes and health checks
 
 **Application Environment, Configuration and Security**
-* Understand ConfigMaps
-* Understand Secrets
+* Understand ConfigMaps (pt. 1)
 
 ### Daemonsets
 
