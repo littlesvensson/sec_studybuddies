@@ -456,7 +456,7 @@ k create cm <configmap name> --from-file=key1=/path/to/bar/file1.txt --from-file
 In the example above, keys are directly defined and values are read from files. If the file key name is not specified, the file name will be used as the key in the ConfigMap. Or in ohter words, if you want to specify a different key name, you can use the `--from-file=<key>=<path>` option.
 
 
-### TASK! (#7)
+### TASK! (#4)
 
 Create two configmaps:
 1. `holyconfig` with two key-value pairs: `BESTCHAPTERINTHEWORLD=security` 
