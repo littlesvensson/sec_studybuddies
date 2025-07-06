@@ -14,9 +14,6 @@ SESSION 4, 7.7.2025
 **Application Environment, Configuration and Security**
 * Understand ServiceAccounts
 * Discover and use resources that extend Kubernetes (CRD, Operators)
-* Understand requests, limits, quotas
-* Define resource requirements
-* Understand Application Security (SecurityContexts, Capabilities, etc.)
 
 **wrap up, homework, next steps**
 
@@ -189,25 +186,38 @@ After you create the deployment, check the log of one of the created pods to fin
 
 StatefulSets are used for managing stateful applications, which require stable, unique network identifiers and persistent storage. They provide guarantees about the ordering and uniqueness of pods, making them suitable for applications like databases or distributed systems.
 
+Key characteristics of StatefulSets:
+- **Stable Network Identity**: Each pod in a StatefulSet has a unique, stable hostname that persists across rescheduling.
+- **Ordered Deployment and Scaling**: Pods are created, updated, and deleted in a specific order, ensuring that the first pod is always created first, the second pod is created after the first, and so on.
+- **Persistent Storage**: StatefulSets can be associated with PersistentVolumeClaims (PVCs) to provide stable storage for each pod. Each pod gets its own PVC, which is not shared with other pods in the StatefulSet. This allows each pod to have its own persistent storage, which is crucial for stateful applications.
+- **Ordered Termination**: Pods are terminated in reverse order, ensuring that the last pod is terminated first, allowing for graceful shutdowns and data preservation.
+
 We cannot create statefulsets imperatively, but we can scale them using the `k scale sts <statefulset name> --replicas=<number of replicas>` command. Also, we can delete and edit stateful sets.
 
 Let's check a [simple statefulset from the official documentation](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components)
 
 We will wait with task for a statefulset until we get to some other necessary concepts like headless service and volume claims. For now, what you need to know is that they are useful for managing stateful application and are ordered. 
 
-### Time for some Volume (Utilize persistent and ephemeral volumes)
+### Time for increase Volume (Utilize persistent and ephemeral volumes)
 
-In Kubernetes, volumes are storage resources that allow containers in a pod to persist data, share data, or access configuration across restarts or between containers. <br>
+A volume is a storage resource that a pod’s containers can read from or write to. Unlike the ephemeral container file system, volumes persist across container restarts (but not pod restarts — unless backed by persistent storage). <br>
 
 There are two types of volumes in Kubernetes: *ephemeral* and *persistent*. 
 
 ##### Ephemeral volumes
 
-Ephemeral volumes such as emptyDir, configMap, and secret, exist only for the lifetime of a pod and are typically used for temporary data, sharing files between containers, or injecting configuration. Once your pod dies, ephemeral volume data is dead too.
+Ephemeral volumes such as emptyDir, configMap, and secret, exist only for the lifetime of a pod (but not container lifetime - meaning when container within a pod restarts, ephemeral volumes are still there unchanged) and are typically used for temporary data, sharing files between containers, or injecting configuration. Once your pod dies, ephemeral volume data is dead too.
 
 For a Pod that defines an `emptyDir` volume, the volume is created when the Pod is assigned to a node. As the name says, the emptyDir *volume is initially empty*. All containers in the Pod can read and write the same files in the emptyDir volume.
 
-Example of an `emptyDir` volume spec within a Pod:
+is a type of volume that is:
+Created when the Pod starts
+
+Deleted when the Pod is removed
+
+Shared among all containers in the Pod that mount it
+
+Example of an `emptyDir` volume spec within a Pod [from the official documentation](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir-configuration-example):
 
 ```yaml
 apiVersion: v1
@@ -225,28 +235,36 @@ spec:
   - name: cache-volume
     emptyDir:
       sizeLimit: 500Mi
-      medium: Memory
 ```
-### TASK! (#3)
+### TASK! (#3, together)
 
-Create a deployment called log-writer with 1 replica. It should:
+Create a deployment with the following specification:
 
-Run a pod with two containers:
+- 1 replica
+- Name: log-writer
+- Namespace: studybuddies
+- Containers (2):
+  - Writer container:
+    - Image: busybox
+    - Neme: log-writer
+    - Command: ["sh", "-c", "while true; do date >> /shared/log.txt; sleep 5; done"]
+  - Reader container:
+    - Image: busybox
+    - Name: log-reader
+    - Command: ["sh", "-c", "while true; do cat /shared/log.txt; sleep 5; done"]
+  - Use an emptyDir volume named shared-logs to share data between the two containers.
+- mount the shared volume at /shared in both containers
 
-A writer container using image busybox, that writes the current time to /shared/log.txt every 5 seconds.
+A writer container will write the current time to /shared/log.txt every 5 seconds.
+A reader container will print the contents of /shared/log.txt every 5 seconds.
 
-A reader container using image busybox, that prints the contents of /shared/log.txt every 5 seconds.
+We will use sleep + sh -c pattern for infinite looping (since busybox doesn't have cron or tail features).
 
-Use an emptyDir volume named shared-logs to share data between the two containers.
-
-Use the sleep + sh -c pattern for infinite looping (since busybox doesn't have cron or tail features).
-
-Tip: Mount the shared volume at /shared in both containers.
+Stuck on the way? Check the solution in the [./task4_3/solution.md](./task4_3/solution.md) file.
 
 ##### configMap and secret volumes
 
 Mount a configMap or secret as a file inside a container.
-
 
 ```yaml
 volumes:
@@ -254,22 +272,35 @@ volumes:
     configMap:
       name: mylittleconfig
 ```
+````yaml
+volumeMounts:
+  - name: config-volume
+    mountPath: /etc/config
+    readOnly: true
+```
+
 ```yaml
 volumes:
   - name: secret-volume
     secret:
       secretName: mylittlesecret
 ```
-
-
+```yaml
+volumeMounts:
+  - name: secret-volume
+    mountPath: /etc/secret
+    readOnly: true
+```
 
  #### Persistent volumes
- , on the other hand, are designed to retain data beyond the lifecycle of individual pods. They rely on resources like PersistentVolume (PV) and PersistentVolumeClaim (PVC) to manage durable storage, often backed by external systems like cloud block storage or NFS. By using volumes, Kubernetes decouples storage from containers, enabling stateful applications to run reliably in dynamic environments.
+ 
+Persistent volumes are designed to retain data beyond the lifecycle of individual pods. They rely on resource types like PersistentVolume (PV) and PersistentVolumeClaim (PVC) to manage durable storage. By using persistent volumes, Kubernetes decouples storage from containers, enabling stateful applications to run reliably in dynamic environments.
+
+##### Connected resource types
 
 1. PersistentVolume (PV)
-Represents a piece of storage provisioned by an admin or dynamically provisioned.
-
-It's cluster-wide and exists independently of pods.
+- Represents a piece of storage provisioned by an admin or dynamically provisioned.
+- It's cluster-wide and exists independently of pods.
 
 You typically won’t need to create PVs on the CKAD exam — focus on consuming them via PVCs.
 
@@ -279,9 +310,7 @@ A request for storage by a user or app.
 Binds to a matching PV based on:
 
 AccessModes
-
 Storage size
-
 StorageClass (optional)
 
 
@@ -374,139 +403,15 @@ If you wish not to mount the ServiceAccount token into the pod, you can set the 
 > Note2: In the CKAD context, you will need to be able to create a ServiceAccount and assign it to a Pod. You will not need to create Roles or RoleBindings, as they are part of the CKA exam.
 
 
-### TASK! (#5)
+### TASK! (#4)
 
 Create a ServiceAccount named `loyalservant` in the namespace `studybuddies`. 
 Then, create a deployment in the studybuddies namespace that uses this ServiceAccount. Deployment should have the name `bossdeploy` with the image `busybox`. The pod should print "I am loyal" and fall asleep for 3600 seconds. (you can use command -- echo "I am loyal" && sleep 3600)
 
 
-## Application Security (SecurityContexts, Capabilities, etc.)
-
-For the CKAD exam, you need to understand application-level security features — mostly how to use SecurityContexts and basic Linux capabilities within pods and containers.
-
-#### SecurityContext
-
-A SecurityContext is used to define security-related settings for pods or containers (e.g., user IDs, privilege level, filesystem settings).
-
-There are two levels:
-
-a. Pod-level SecurityContext in `spec.securityContext`
-Applies to all containers in the pod.
-
-```bash
-k explain pod.spec.securityContext --recursive
-```
-
-```yaml
-KIND:       Pod
-VERSION:    v1
-
-FIELD: securityContext <PodSecurityContext>
-
-
-DESCRIPTION:
-    SecurityContext holds pod-level security attributes and common container
-    settings. Optional: Defaults to empty.  See type description for default
-    values of each field.
-    PodSecurityContext holds pod-level security attributes and common container
-    settings. Some fields are also present in container.securityContext.  Field
-    values of container.securityContext take precedence over field values of
-    PodSecurityContext.
-
-FIELDS:
-  fsGroup	<integer>
-  fsGroupChangePolicy	<string>
-  runAsGroup	<integer>
-  runAsNonRoot	<boolean>
-  runAsUser	<integer>
-  seLinuxOptions	<SELinuxOptions>
-    level	<string>
-    role	<string>
-    type	<string>
-    user	<string>
-  seccompProfile	<SeccompProfile>
-    localhostProfile	<string>
-    type	<string> -required-
-    enum: Localhost, RuntimeDefault, Unconfined
-  supplementalGroups	<[]integer>
-  sysctls	<[]Sysctl>
-    name	<string> -required-
-    value	<string> -required-
-  windowsOptions	<WindowsSecurityContextOptions>
-    gmsaCredentialSpec	<string>
-    gmsaCredentialSpecName	<string>
-    hostProcess	<boolean>
-    runAsUserName	<string>
-```
-
-b. Container-level SecurityContext in `spec.containers[].securityContext`
-Overrides pod-level for the specific container.
-
-```bash
-k explain pod.spec.containers.securityContext --recursive
-```
-```yaml
-KIND:       Pod
-VERSION:    v1
-
-FIELD: securityContext <SecurityContext>
-
-DESCRIPTION:
-    SecurityContext defines the security options the container should be run
-    with. If set, the fields of SecurityContext override the equivalent fields
-    of PodSecurityContext. More info:
-    https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-    SecurityContext holds security configuration that will be applied to a
-    container. Some fields are present in both SecurityContext and
-    PodSecurityContext.  When both are set, the values in SecurityContext take
-    precedence.
-
-FIELDS:
-  allowPrivilegeEscalation	<boolean>
-  capabilities	<Capabilities>
-    add	<[]string>
-    drop	<[]string>
-  privileged	<boolean>
-  procMount	<string>
-  readOnlyRootFilesystem	<boolean>
-  runAsGroup	<integer>
-  runAsNonRoot	<boolean>
-  runAsUser	<integer>
-  seLinuxOptions	<SELinuxOptions>
-    level	<string>
-    role	<string>
-    type	<string>
-    user	<string>
-  seccompProfile	<SeccompProfile>
-    localhostProfile	<string>
-    type	<string> -required-
-    enum: Localhost, RuntimeDefault, Unconfined
-  windowsOptions	<WindowsSecurityContextOptions>
-    gmsaCredentialSpec	<string>
-    gmsaCredentialSpecName	<string>
-    hostProcess	<boolean>
-    runAsUserName	<string>
-```
-
-In CKAD, you will most likely be instructed to set the SecurityContext either for pod or particular container with specific fields given by the task.
-
-2. Capabilities
-Linux capabilities let you drop or add fine-grained privileges.
-
-3. Privileged Mode
-Allows the container to access host-level resources (⚠ dangerous).
-
-4. Run as Non-Root
-To improve security, run containers as non-root:
-
-5. Read-only Filesystem
-Improves container immutability:
-
-For CKAD, you need to know how to set securityContext above mentioned fields (and ideally understand what they mean :) .
-
 ## CRDs 
 
-A CRD (CustomResourceDefinition) extends the Kubernetes API with new resource types. It's basically a resource type similar to pods, services, deployments, etc., but defined by users or developers. Which means they are not built-in resources.
+A CRD (CustomResourceDefinition ) extends the Kubernetes API with new resource types. It's basically a resource type similar to pods, services, deployments, etc., but defined by users or developers. Which means they are not built-in resources.
 
 It allows you to define custom objects like Cluster, AppFwAPI, AppFw, etc.
 
@@ -537,14 +442,13 @@ k explain certificates.cert-manager.io --recursive
 With this command, you can see the structure and fields of the `certificates` resource defined by the cert-manager CRD. From this, you can learn how to create a certificate resource and what fields are available.
 
 
-TASK! (#6)
+### TASK! (#5)
 Task for this topic is [waiting for you in KillerCoda](https://killercoda.com/killer-shell-ckad/scenario/crd)!
 
 https://killercoda.com/killer-shell-ckad/scenario/crd
 
 
-
-## HOMEWORK(#1)
+### HOMEWORK! (#2)
 
 If you have not done some of the tasks during the session, you can do them at home :)
 Also, there are some additional tasks for you to practice at Killercoda CKAD section:
@@ -554,4 +458,18 @@ Also, there are some additional tasks for you to practice at Killercoda CKAD sec
 - [Readiness Probe](https://killercoda.com/killer-shell-ckad/scenario/readiness-probe)
 - [Build and Run a Container](https://killercoda.com/killer-shell-ckad/scenario/container-build)
 - [Rollout Rolling](https://killercoda.com/killer-shell-ckad/scenario/rollout-rolling)
+
+
+## Wrap up
+Congratulations on completing the fourth session of the Study Buddies series!
+
+Today, we have learned:
+
+* How to understand and ConfigMaps and Secrets
+* What are StatefulSet
+* How to utilize persistent and ephemeral volumes
+* What are ServiceAccounts for and how to implement them
+* What are CRDs and Kubernetees Operators
+
+I  hope this session gave you some knowledge and inspiration and you had at least a bit of fun on the way. Please let me know your feedback and any improvement suggestions, this should help us all with preparation and the right feedback would make this serie more efficient.
 
