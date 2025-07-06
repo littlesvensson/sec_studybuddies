@@ -206,16 +206,9 @@ There are two types of volumes in Kubernetes: *ephemeral* and *persistent*.
 
 ##### Ephemeral volumes
 
-Ephemeral volumes such as emptyDir, configMap, and secret, exist only for the lifetime of a pod (but not container lifetime - meaning when container within a pod restarts, ephemeral volumes are still there unchanged) and are typically used for temporary data, sharing files between containers, or injecting configuration. Once your pod dies, ephemeral volume data is dead too.
+Ephemeral volumes such as emptyDir, configMap, and secret, **exist only for the lifetime of a pod** (but not container lifetime - meaning when container within a pod restarts, ephemeral volumes are still there unchanged) and are typically used for temporary data, sharing files between containers, or injecting configuration. Once your pod dies, ephemeral volume data is dead too.
 
-For a Pod that defines an `emptyDir` volume, the volume is created when the Pod is assigned to a node. As the name says, the emptyDir *volume is initially empty*. All containers in the Pod can read and write the same files in the emptyDir volume.
-
-is a type of volume that is:
-Created when the Pod starts
-
-Deleted when the Pod is removed
-
-Shared among all containers in the Pod that mount it
+For a Pod that defines an `emptyDir` volume, the volume is created when the Pod is assigned to a node. As the name says, the emptyDir **volume is initially empty**. All containers in the Pod can read and write the same files in the emptyDir volume.
 
 Example of an `emptyDir` volume spec within a Pod [from the official documentation](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir-configuration-example):
 
@@ -228,13 +221,13 @@ spec:
   containers:
   - image: registry.k8s.io/test-webserver
     name: test-container
-    volumeMounts:
-    - mountPath: /cache
+    volumeMounts:             # volumeMounts are defined within the container spec
+    - mountPath: /cache       # path to mount the volume inside the container. Theoretiacally, you can have different mount paths for different containers in the same pod and they would still share the same volume
       name: cache-volume
   volumes:
   - name: cache-volume
-    emptyDir:
-      sizeLimit: 500Mi
+    emptyDir:                    
+      sizeLimit: 500Mi        # optional, but you can specify a size limit for the emptyDir volume
 ```
 ### TASK! (#3, together)
 
@@ -246,7 +239,7 @@ Create a deployment with the following specification:
 - Containers (2):
   - Writer container:
     - Image: busybox
-    - Neme: log-writer
+    - Name: log-writer
     - Command: ["sh", "-c", "while true; do date >> /shared/log.txt; sleep 5; done"]
   - Reader container:
     - Image: busybox
@@ -272,7 +265,7 @@ volumes:
     configMap:
       name: mylittleconfig
 ```
-````yaml
+```yaml
 volumeMounts:
   - name: config-volume
     mountPath: /etc/config
@@ -305,7 +298,7 @@ Persistent volumes are designed to retain data beyond the lifecycle of individua
 You typically won’t need to create PVs on the CKAD exam — focus on consuming them via PVCs.
 
 2. PersistentVolumeClaim (PVC)
-A request for storage by a user or app.
+- A request for storage by a user or app.
 
 Binds to a matching PV based on:
 
@@ -339,19 +332,19 @@ volumeMounts:
 
 ### HOMEWORK! (#2)
 
-Create a new PersistentVolume named `mycoolpv` with the following specifications:
-- Access mode: ReadWriteOnce
-- Storage request: 2Gi
-- hostPath: /mnt/data
+- Create a new PersistentVolume named `mycoolpv` with the following specifications:
+  - Access mode: ReadWriteOnce
+  - Storage request: 2Gi
+  - hostPath: /mnt/data
 
-Then, create a PersistentVolumeClaim named `evencoolerpvc` that:
-- requests 2Gi of storage
-- uses the ReadWriteOnce access mode 
-- should not define StorageClassnaem
+- Then, create a PersistentVolumeClaim named `evencoolerpvc` that:
+  - requests 2Gi of storage
+  - uses the ReadWriteOnce access mode 
+  - should not define StorageClassnaem
 
-The PVC should bound to PV correctly
+- The PVC should bound to PV correctly
 
-Finally, create a Deployment named `lookinggood` in the namespace `studybuddies` that uses the `mypvc` PersistentVolumeClaim to mount the volume at `/data` inside the container.
+- Finally, create a Deployment named `lookinggood` in the namespace `studybuddies` that uses the `mypvc` PersistentVolumeClaim to mount the volume at `/data` inside the container.
 
 
 ## ServiceAccounts
