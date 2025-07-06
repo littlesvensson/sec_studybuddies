@@ -124,9 +124,66 @@ Create a secret in the namespace `studybuddies` with the name `mydirtysecret` th
 
 When finished, write to the channel "I am a pro." (If doing outside of the session, tell out loud: "I AM A PRO!")
 
-## HOMEWORK(#1)
+##### How to use Secrets in Pods
 
-# TODO: mounting secret thebestlecturerever as an environment variable in the nostalgic deployment
+Similarly to ConfigMaps you can use Secrets in your pods by mounting them as volumes or using them as environment variables.
+
+Using [Secrets as environment variables](https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/#define-a-container-environment-variable-with-data-from-a-single-secret):
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: env-single-secret
+spec:
+  containers:
+  - name: envars-test-container
+    image: nginx
+    env:
+    - name: SECRET_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: backend-user
+          key: backend-username
+```
+We can see in the example above that we are using the `valueFrom` field to reference a specific key in the secret. The `secretKeyRef` field specifies the name of the secret and the key within that secret. So basically, we use totally the same pattern as with ConfigMaps, but instead of `configMapKeyRef`, we use `secretKeyRef`.
+
+Using [Secrets as volumes](https://kubernetes.io/docs/concepts/configuration/secret/#using-a-secret):
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cutething
+spec:
+  containers:
+  - name: cutething
+    image: redis
+    volumeMounts:
+    - name: foo
+      mountPath: "/etc/cute"
+      readOnly: true
+  volumes:
+  - name: cute
+    secret:
+      secretName: mycutesecret
+      optional: true
+```
+In this example, we are mounting the secret as a volume in the pod. The `secretName` field specifies the name of the secret, and the `mountPath` field specifies where the secret will be mounted inside the container. The files in the secret will be available as files in the specified directory. Again, very similar to ConfigMaps, but instead of `configMap` property, we use `secret`.
+
+
+## HOMEWORK! (#1)
+
+Create a Deployment in the studybuddies namespace with the following requirements:
+
+- Name: secretholder
+- Namespace: studybuddies
+- Replicas: 2
+- Container image: littlesvensson/dirtysecret
+- The secret from the task 1 `mydirtysecret` must be mounted as a volume inside the deployment pods
+- Mount path: /etc/secretinfo (the application should be able to read the value of thebestlecturerever from a file located at /etc/secretinfo/thebestlecturerever)
+
+After you create the deployment, check the log of one of the created pods to find out the truth.
 
 ### StatefulSets
 
