@@ -62,9 +62,9 @@ k api-resources
 kubectl explain deployment | grep VERSION
 k get events
 
-### TASK! (#4)
+### TASK! (#1)
 
-In the folder `session_3/task3_2`, you will find a file called `sickcronjob.yaml`. Deploy the manifest to your cluster and troubleshoot any issues that arise.
+In the folder [task5_1](./task5_1/), you will find a file called [sadcronjob.yaml](./task5_1/sadcronjob.yaml). Deploy the manifest to your cluster and troubleshoot any issues that arise.
 
 Stuck on the way? Check the solution in `session_3/task3_2/solution.md`.
 
