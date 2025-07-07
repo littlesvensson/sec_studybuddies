@@ -72,10 +72,10 @@ Create a deployment with 3 replicas within the studybuddies namespace with the n
 - replicas: 3
 - namespace: studybuddies
 - image: busybox
-- command: `sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"`
+- command: sh -c "echo Best chapter in the world is \$BESTCHAPTERINTHEWORLD && sleep 3600"
 - environment variable: `BESTCHAPTERINTHEWORLD` from the `holyConfig` ConfigMap
 
-Hint: You can design the deployment imperatively using the `k create deploy <name of deployment> -n <namespace name> --image=<image name> --replicas=<number of replicas> --dry-run=client -oyaml -- 'sh -c "echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600"' command, but with the `--dry-run=client -o yaml` flags to generate the YAML manifest. Then you can edit the manifest (add env from configmap) and apply it.
+Hint: You can design the deployment imperatively using the `k create deploy <name of deployment> -n <namespace name> --image=<image name> --replicas=<number of replicas> -- sh -c "echo 'Best chapter in the world is $BESTCHAPTERINTHEWORLD' && sleep 3600" ` command, but with the `--dry-run=client -o yaml` flags to generate the YAML manifest. Then you can edit the manifest (add env from configmap) and apply it.
 
 Time CAP: 5 minutes.
 

@@ -1,7 +1,7 @@
 Lets generate the base for our deployment manifest using the `k create deploy` command with the `--dry-run=client -o yaml` flags:
 
 ```bash
-k create deploy nostalgic -n studybuddies --image=busybox --replicas=3 --dry-run=client -oyaml -- sh -c 'echo Best chapter in the world is $BESTCHAPTERINTHEWORLD && sleep 3600' > nostalgic.yaml
+k create deploy nostalgic -n studybuddies --image=busybox --replicas=3 --dry-run=client -oyaml -- sh -c "echo Best chapter in the world is \$BESTCHAPTERINTHEWORLD && sleep 3600" > nostalgic.yaml
 ```
 This will be your generated output:
 
