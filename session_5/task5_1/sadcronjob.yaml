@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: CronJob
+metadata:
+  name: sadcronjob
+spec:
+  jobTemplate:
+    metadata:
+      name: sadcronjob
+    spec:
+      template:
+        spec:
+          containers:
+          - command:
+            - curl
+            - https://helloacm.com/api/fortune/
+            image: curlimages/curl
+            name: fortune
+            resources: {}
+          restartPolicy: OnFailure
+  schedule: '*/5 * * * *'
+status: {}

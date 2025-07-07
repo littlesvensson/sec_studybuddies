@@ -1,12 +1,40 @@
-* Understand requests, limits, quotas
-* Define resource requirements
-* Understand Application Security (SecurityContexts, Capabilities, etc.)
+SESSION 5, 9.7.2025 
+========================
 
+## Content of the session:
 
 **Application Observability and Maintenance**
 * Understand API deprecations
 * Use built-in CLI tools to monitor Kubernetes application
 
+**Application Environment, Configuration and Security**
+* Understand requests, limits, quotas
+* Define resource requirements
+* Understand Application Security (SecurityContexts, Capabilities, etc.)
+* Understand authentication, authorization and admission control
+
+### Understand API deprecations
+
+Kubernetes evolves fast. Older API versions are marked as deprecated, then eventually removed in later versions.
+
+If you use a deprecated API, your manifests may fail to work after a Kubernetes upgrade.
+
+How to Recognize Deprecated APIs
+Check the apiVersion: field in your YAML.
+
+
+Helpful tools/commands
+```bash
+# Check available API versions
+k api-resources
+kubectl explain deployment | grep VERSION
+```
+
+### TASK! (#1)
+
+In the folder [task5_1](./task5_1/), you will find a file called [sadcronjob.yaml](./task5_1/sadcronjob.yaml). Deploy the manifest to your cluster and troubleshoot any issues that arise.
+
+Stuck on the way? Check the solution in [session_5/task5_1/solution.md](/session_5/task5_1/solution.md).
 
 
 ### Use built-in CLI tools to monitor Kubernetes application
@@ -38,36 +66,6 @@ kubectl get all	All workload resources (pods, svc, rs, etc.) in current namespac
 kubectl rollout history deployment <name>	Deployment version history
 kubectl get rs	View ReplicaSets tied to a Deployment
 kubectl get jobs / cronjobs
-
-### Understand API deprecations
-
-Kubernetes evolves fast. Older API versions are marked as deprecated, then eventually removed in later versions.
-
-If you use a deprecated API, your manifests may fail to work after a Kubernetes upgrade.
-
-How to Recognize Deprecated APIs
-Check the apiVersion: field in your YAML.
-
-# DEPRECATED (removed in 1.22)
-apiVersion: apps/v1beta1
-kind: Deployment
-
-# CORRECT (current)
-apiVersion: apps/v1
-kind: Deployment
-
-
-Helpful tools/commands
-k api-resources
-kubectl explain deployment | grep VERSION
-k get events
-
-### TASK! (#1)
-
-In the folder [task5_1](./task5_1/), you will find a file called [sadcronjob.yaml](./task5_1/sadcronjob.yaml). Deploy the manifest to your cluster and troubleshoot any issues that arise.
-
-Stuck on the way? Check the solution in `session_3/task3_2/solution.md`.
-
 
 ## Application Security (SecurityContexts, Capabilities, etc.)
 
@@ -192,5 +190,77 @@ To improve security, run containers as non-root:
 Improves container immutability:
 
 For CKAD, you need to know how to set securityContext above mentioned fields (and ideally understand what they mean :) .
+
+## Understand authentication, authorization and admission control
+
+1. ✅ Authentication (Who are you?)
+Kubernetes checks who is making the request.
+
+This could be a user, service account, or external identity (via certificates, tokens, etc.).
+
+Most commonly in CKAD, this shows up when:
+
+Your pod is running with a service account
+
+You get Unauthorized errors if the kubeconfig is wrong or permissions are missing
+
+👉 CKAD-level takeaway:
+Be aware that service accounts are how workloads authenticate to the API server.
+
+2. ✅ Authorization (What can you do?)
+After identifying who, Kubernetes checks what they’re allowed to do.
+
+It uses things like:
+
+RBAC (Role-Based Access Control) — the most common
+
+kubectl auth can-i to test permissions
+
+👉 CKAD-level takeaway:
+
+Know how to check if your service account or user can perform an action:
+
+bash
+Copy
+Edit
+kubectl auth can-i get pods --as system:serviceaccount:myns:myaccount
+3. ✅ Admission Control (Should we allow it?)
+Runs after authentication and authorization, before the object is persisted.
+
+Controls like:
+
+ValidatingAdmissionWebhook
+
+MutatingAdmissionWebhook
+
+LimitRanges, PodSecurity, ResourceQuotas
+
+👉 CKAD-level takeaway:
+
+You may encounter errors from things like a validating webhook or namespace quota.
+
+For example:
+
+"Pod denied: CPU request too high"
+
+"Missing label required by policy"
+
+🔍 In Practice
+Component	What it does	CKAD relevance
+Authentication	Identifies the requestor	Mostly behind the scenes
+Authorization	Approves/rejects based on roles	Important when using service accounts, RBAC
+Admission control	Final checks/patches before storing	May block objects if they violate policy
+
+🧪 What You Should Practice
+Create and use service accounts
+
+Set automountServiceAccountToken: false when needed
+
+Use kubectl auth can-i to troubleshoot permissions
+
+Recognize common admission control errors in kubectl describe or kubectl get events
+
+
+
 
 ## Resource management

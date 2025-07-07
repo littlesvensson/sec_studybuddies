@@ -7,8 +7,12 @@ k create sa -n studybuddies loyalservant
 Then, we will create a base for our yaml manifest:
 
 ```bash
-k create deploy -n studybuddies bossdeploy --image=busybox --replicas=3 --dry-run=client -oyaml -- sh -c "echo 'I am loyal' && sleep 3600" > bossdeploy.yaml
+k create deploy -n studybuddies bossdeploy --image=busybox --replicas=3 -- sh -c 'echo "I am loyal" && sleep 3600' > bossdeploy.yaml
 ```
+```bash
+cat bossdeploy.yaml
+```
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -34,7 +38,7 @@ spec:
       - command:
         - sh
         - -c
-        - echo 'I am loyal' && sleep 3600
+        - echo "I am loyal" && sleep 3600
         image: busybox
         name: busybox
         resources: {}
@@ -73,7 +77,7 @@ spec:
       - command:
         - sh
         - -c
-        - echo 'I am loyal' && sleep 3600
+        - echo "I am loyal" && sleep 3600
         image: busybox
         name: busybox
         resources: {}

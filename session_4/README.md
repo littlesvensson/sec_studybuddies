@@ -84,7 +84,7 @@ Stuck on the way? Check the solution in the [./task4_1/solution.md](./task4_1/so
 ### Secrets
 
 Secrets are used to store sensitive information, such as passwords, tokens, or SSH keys. They are similar to ConfigMaps but are designed to handle sensitive data securely. You can create then directly from literal values, files, or directories. 
-Although they are base64 encoded, they are not encrypted by default (unless encryption-at-rest is enabled). Because base64 encoding is NOT AN ENCRYPTION! The topic of encryption-at-rest is a topic of of CKAD exam, but you will encounter it in the CKA. For now, you need to know what secret is, how to create one and how to use it for your workloads.
+Although they are base64 encoded, they are not encrypted by default (unless encryption-at-rest is enabled). Because base64 encoding is NOT AN ENCRYPTION! The reason for thes encoding is to ensure the data can be safely stored and transmitted in YAML or JSON, which do not support raw binary data — it is **for formatting compatibility, not for security**. The topic of encryption-at-rest is not a topic of of CKAD exam, but you will encounter it in the CKA. For now, you need to know what secret is, how to create one and how to use it for your workloads.
 
 ```bash
 k create secret -h
@@ -187,7 +187,7 @@ After you create the deployment, check the log of one of the created pods to fin
 StatefulSets are used for managing stateful applications, which require stable, unique network identifiers and persistent storage. They provide guarantees about the ordering and uniqueness of pods, making them suitable for applications like databases or distributed systems.
 
 Key characteristics of StatefulSets:
-- **Stable Network Identity**: Each pod in a StatefulSet has a unique, stable hostname that persists across rescheduling.
+- **Stable, Unique Network Identity**: Each pod in a StatefulSet has a unique, stable hostname that persists across rescheduling.
 - **Ordered Deployment and Scaling**: Pods are created, updated, and deleted in a specific order, ensuring that the first pod is always created first, the second pod is created after the first, and so on.
 - **Persistent Storage**: StatefulSets can be associated with PersistentVolumeClaims (PVCs) to provide stable storage for each pod. Each pod gets its own PVC, which is not shared with other pods in the StatefulSet. This allows each pod to have its own persistent storage, which is crucial for stateful applications.
 - **Ordered Termination**: Pods are terminated in reverse order, ensuring that the last pod is terminated first, allowing for graceful shutdowns and data preservation.
@@ -317,7 +317,7 @@ spec:
   nfs:
     path: /tmp
     server: 172.17.0.2
-
+```
 
 ###### 2. PersistentVolumeClaim (pvc)
 - A request for storage by a user or app.
@@ -472,7 +472,7 @@ If you wish not to mount the ServiceAccount token into the pod, you can set the 
 ### TASK! (#4)
 
 Create a ServiceAccount named `loyalservant` in the namespace `studybuddies`. 
-Then, create a deployment in the studybuddies namespace that uses this ServiceAccount. Deployment should have the name `bossdeploy` with the image `busybox`. The pod should print "I am loyal" and fall asleep for 3600 seconds. (you can use command -- echo "I am loyal" && sleep 3600)
+Then, create a deployment in the studybuddies namespace that uses this ServiceAccount. Deployment should have the name `bossdeploy` with the image `busybox`. The pod should print "I am loyal" and fall asleep for 3600 seconds. (you can use command -- sh -c 'echo "I am loyal" && sleep 3600')
 
 ## CRDs 
 
@@ -488,6 +488,7 @@ For CKAD, you consume CRDs — you don't create them.
 k get crd
 k get <custom resource name> 
 k explain <crd> --recursive
+```
 
 Lets try out together!
 
