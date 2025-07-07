@@ -184,7 +184,7 @@ After you create the deployment, check the log of one of the created pods to fin
 
 ### StatefulSets
 
-StatefulSets are used for managing stateful applications, which require stable, unique network identifiers and persistent storage. They provide guarantees about the ordering and uniqueness of pods, making them suitable for applications like databases or distributed systems.
+StatefulSets are ideal for managing stateful applications that require stable network identities and persistent storage — such as databases, message queues, or clustered systems. Unlike Deployments, StatefulSets ensure each pod keeps its identity and associated volume across restarts and rescheduling.
 
 Key characteristics of StatefulSets:
 - **Stable, Unique Network Identity**: Each pod in a StatefulSet has a unique, stable hostname that persists across rescheduling.
