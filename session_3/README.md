@@ -458,7 +458,7 @@ In the example above, keys are directly defined and values are read from files. 
 
 ### TASK! (#4)
 
-Create two configmaps:
+Create two configmaps, both in the `studybuddies` namespace:
 1. `holyconfig` with two key-value pairs: `BESTCHAPTERINTHEWORLD=security` 
 2. `holyconfig2` from a file `config` within the [task3_4/](./task3_4/) folder. 
 
