@@ -240,7 +240,7 @@ Create a deployment with the following specification:
   - Writer container:
     - Image: busybox
     - Name: log-writer
-    - Command: ["sh", "-c", "while true; do date >> /shared/log.txt; sleep 5; done"]
+    - Command: ["sh", "-c", "while true; do echo \"Just another boring log... $(date)\" >> /shared/log.txt; sleep 5; done"]
   - Reader container:
     - Image: busybox
     - Name: log-reader
