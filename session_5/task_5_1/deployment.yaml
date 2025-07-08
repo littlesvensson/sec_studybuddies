@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lookinggood
+  namespace: studybuddies
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lookinggood
+  template:
+    metadata:
+      labels:
+        app: lookinggood
+    spec:
+      containers:
+      - name: whalesay
+        image: docker/whalesay
+        command:
+          - cowsay
+          - CKAD is fun and I am looking good
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: evencoolerpvc

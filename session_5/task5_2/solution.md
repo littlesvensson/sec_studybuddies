@@ -7,7 +7,7 @@ k create sa -n studybuddies loyalservant
 Then, we will create a base for our yaml manifest:
 
 ```bash
-k create deploy -n studybuddies bossdeploy --image=busybox --replicas=3 -- sh -c 'echo "I am loyal" && sleep 3600' > bossdeploy.yaml
+k create deploy -n studybuddies bossdeploy --image=busybox -- sh -c 'echo "I am loyal" && sleep 3600' > bossdeploy.yaml
 ```
 ```bash
 cat bossdeploy.yaml
@@ -23,7 +23,6 @@ metadata:
   name: bossdeploy
   namespace: studybuddies
 spec:
-  replicas: 3
   selector:
     matchLabels:
       app: bossdeploy
@@ -61,7 +60,6 @@ metadata:
   name: bossdeploy
   namespace: studybuddies
 spec:
-  replicas: 3
   selector:
     matchLabels:
       app: bossdeploy

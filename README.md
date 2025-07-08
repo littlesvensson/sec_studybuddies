@@ -3,7 +3,7 @@ Repo with material for the POC CKAD training sessions
 
 #### Application Design and Build (20%)
 - [x] Define, build and modify container images
-- [ ] Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.)
+- [x] Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.)
 - [x] Understand multi-container Pod design patterns (e.g. sidecar, init and others)
 - [ ] Utilize persistent and ephemeral volumes
 
@@ -24,9 +24,9 @@ Repo with material for the POC CKAD training sessions
 - [ ] Discover and use resources that extend Kubernetes (CRD, Operators)
 - [ ] Understand authentication, authorization and admission control
 - [ ] Understand requests, limits, quotas
-- [ ] Understand ConfigMaps
+- [x] Understand ConfigMaps
 - [ ] Define resource requirements
-- [ ] Create & consume Secrets
+- [x] Create & consume Secrets
 - [ ] Understand ServiceAccounts
 - [ ] Understand Application Security (SecurityContexts, Capabilities, etc.)
 
