@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pv-inspector
+  namespace: studybuddies
+spec:
+  containers:
+  - name: inspect
+    image: busybox
+    command: ["sleep", "3600"]
+    volumeMounts:
+    - mountPath: /tralala
+      name: evencoolerpvc
+  volumes:
+  - name: evencoolerpvc
+    persistentVolumeClaim:
+      claimName: evencoolerpvc
+  restartPolicy: Never

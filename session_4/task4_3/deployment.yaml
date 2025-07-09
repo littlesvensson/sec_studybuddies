@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: log-writer
+  name: log-writer
+  namespace: studybuddies
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-writer
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: log-writer
+    spec:
+      containers:
+      - image: busybox
+        name: log-writer
+        command: ["sh", "-c", "while true; do echo \"Just another boring log... $(date)\" >> /shared/log.txt; sleep 5; done"]                                                                            # Added command
+        volumeMounts:                                                                     # Added volumeMounts section for log-writer container
+        - mountPath: /shared                                                              # Added volumeMounts section for log-writer container
+          name: shared-logs                                                               # Added volumeMounts section for log-writer container
+      - image: busybox                                                                    # Added log-reader container
+        name: log-reader                                                                  # Added log-reader container
+        command: ["sh", "-c", "while true; do cat /shared/log.txt; sleep 5; done"]        # Added command
+        volumeMounts:                                                                     # Added volumeMounts section for log-reader container
+        - mountPath: /shared                                                              # Added volumeMounts section for log-reader container
+          name: shared-logs                                                               # Added volumeMounts section for log-reader container
+      volumes:                                                                            # Added volumes section
+      - name: shared-logs                                                                 # Added volumes section
+        emptyDir: {}                                                                      # Added volumes section. If there is no special configuration for it, use curly braces: `{}`.
+status: {}

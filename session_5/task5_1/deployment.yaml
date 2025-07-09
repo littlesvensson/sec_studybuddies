@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: lookinggood
+  name: lookinggood
+  namespace: studybuddies
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lookinggood
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: lookinggood
+    spec:
+      containers:
+      - command:
+        - sh
+        - -c
+        - 'cowsay "CKAD is fun and I am looking good" >> /data/whalesay && sleep 3600'
+        image: docker/whalesay
+        volumeMounts:                        # Added volumeMounts section
+        - mountPath: "/data"                 # Added volumeMounts section
+          name: evencoolerpvc                # Added volumeMounts section
+        name: whalesay
+        resources: {}
+      volumes:                               # Added volumes section
+        - name: evencoolerpvc                # Added volumes section
+          persistentVolumeClaim:             # Added volumes section
+            claimName: evencoolerpvc         # Added volumes section
+status: {}

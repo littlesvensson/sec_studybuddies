@@ -150,10 +150,10 @@ Finally, create a Deployment with the following specifics:
 - name: `lookinggood`
 - namespace `studybuddies`
 - image: `docker/whalesay`
-- command: `sh -c 'cowsay "CKAD is fun and I am looking good" && sleep 3600'`
+- command: sh -c 'cowsay "CKAD is fun and I am looking good" && sleep 3600'
 - uses `evencoolerpvc` PersistentVolumeClaim to mount the volume at `/data` inside the container.
 
-Once done, check the logs of the pod to see a beautifule whale.
+Once done, express your happiness in the chat!
 
 Time CAP: 5 minutes
 
@@ -203,8 +203,7 @@ If you wish not to mount the ServiceAccount token into the pod, you can set the 
 
 > Note: It is also possible to specify a ServiceAccount and still disable the automatic mounting of the ServiceAccount. This usecase is valid even if it looks a bit counterintuitive. The reason might be that you want to identify the pod in logs or auditing as belonging to a certain ServiceAccount Prevent any process in the container from using the ServiceAccount token for use with the Kubernetes API.
 
-> Note2: In the CKAD context, you will need to be able to create a ServiceAccount and assign it to a Pod. You will not need to create Roles or RoleBindings, as they are part of the CKA exam.
-
+> Note2: In the CKAD context, you will need to be able to create a ServiceAccount and assign it to a Pod. 
 
 ### TASK! (#2)
 
@@ -278,7 +277,7 @@ k api-resources
 kubectl explain deployment | grep VERSION
 ```
 
-### TASK! (#1)
+### TASK! (#4)
 
 In the folder [task5_4](./task5_4/), you will find a file called [sadcronjob.yaml](./task5_1/sadcronjob.yaml). Deploy the manifest to your cluster and troubleshoot any issues that arise.
 
@@ -293,14 +292,19 @@ Kubernetes provides several built-in CLI tools to monitor and troubleshoot appli
 
 k get po:	Pod status (Running, CrashLoopBackOff, Pending)
 k get po -A:	All pods in all namespaces
+k get all:	All workload resources (basically all pods and their controllers + services) in current namespace
+k get all -A: When you want everything :)
 k describe po <pod>:	Detailed events, probe results, resource usage, restarts
 k logs <pod>:	Container stdout/stderr (logs)
 k logs <pod> -c <container>:	Specific container logs in a multi-container pod
 k logs <pod> --previous:	Previous container logs (if restarted)
 k logs <pod> -l app=<label>:	Filter logs by label selector
+k logs deployment/<deployment>:	Choosing one random pod from the deployment to get logs
 k logs -f <pod>:	Live log streaming
 k get deployment:	Deployment status: replicas, available, updated
 k rollout status deployment <name>:	Rollout progress
+k rollout history deployment <name>:	Deployment version history
+k describe <resource type> <name>:	Detailed resource information (events, conditions, etc.)
 k get events: Recent events in the cluster (e.g., pod restarts, scheduling issues)
 
 >Note: the difference between logs and events is that logs are the output of the application running inside the container, while events are Kubernetes system messages about actions taken on resources (like pod restarts, scheduling, etc.). When debuggin, you might need to inspect both of them.
@@ -313,12 +317,14 @@ k top no:	Shows node-level resource usage
 #### Debugging / Troubleshooting
 
 k exec -it <pod> -- bash	Open a shell in a running container
-k cp <pod>:/path /local/path	Copy files from/to a pod
-k port-forward <pod> 8080:80	Access pod apps locally via port forwarding 
+k port-forward <pod> <local port on your machine>:<remote port on the pod>	Access pod apps locally via port forwarding 
 
-#### Status and History Checks
-k get all:	All workload resources (pods, svc, rs, etc.) in current namespace
-k rollout history deployment <name>:	Deployment version history
+```bash
+k run little-port-test --image=nginx --port=80
+k port-forward pod/little-port-test 8080:80
+
+curl http://localhost:8080
+```
 
 ### HOMEWORK! (#2)
 
@@ -330,3 +336,17 @@ Also, there are some additional tasks for you to practice at Killercoda CKAD sec
 - [Readiness Probe](https://killercoda.com/killer-shell-ckad/scenario/readiness-probe)
 - [Build and Run a Container](https://killercoda.com/killer-shell-ckad/scenario/container-build)
 - [Rollout Rolling](https://killercoda.com/killer-shell-ckad/scenario/rollout-rolling)
+
+## Wrap up
+Weheeej, you made it through the fifth session of the Study Buddies series!
+
+Today, we have learned:
+
+* How to work with persistent volumes
+* What are ServiceAccounts for and how to use them
+* What are CRDs
+* Understand API deprecations
+* Usage of built-in CLI tools to monitor Kubernetes application
+
+I  hope this session was interesting for you and you were able to learn something new here and there. Please let me know your feedback and any improvement suggestions for the future, this serie is here for you and the goal is to make it as fun and efficient as possible.
+
