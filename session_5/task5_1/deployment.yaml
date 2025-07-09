@@ -23,7 +23,7 @@ spec:
         - sh
         - -c
         - 'cowsay "CKAD is fun and I am looking good" >> /data/whalesay && sleep 3600'
-        image: docker/whalesay
+        image: rancher/cowsay
         volumeMounts:                        # Added volumeMounts section
         - mountPath: "/data"                 # Added volumeMounts section
           name: evencoolerpvc                # Added volumeMounts section

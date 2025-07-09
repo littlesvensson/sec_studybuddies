@@ -10,10 +10,6 @@ SESSION 5, 9.7.2025
 * Understand ServiceAccounts
 * Discover and use resources that extend Kubernetes (CRD, Operators)
 
-**Application Observability and Maintenance**
-* Understand API deprecations
-* Use built-in CLI tools to monitor Kubernetes application
-
 #### Persistent volumes
  
 Persistent volumes are designed to retain data beyond the lifecycle of individual pods. <br>
@@ -149,7 +145,7 @@ Then, create a PersistentVolumeClaim in the studybuddies namespace named `evenco
 Finally, create a Deployment with the following specifics:
 - name: `lookinggood`
 - namespace `studybuddies`
-- image: `docker/whalesay`
+- image: `rancher/cowsay`
 - command: sh -c 'cowsay "CKAD is fun and I am looking good" && sleep 3600'
 - uses `evencoolerpvc` PersistentVolumeClaim to mount the volume at `/data` inside the container.
 
@@ -260,72 +256,6 @@ Homework for this topic is [waiting for you in KillerCoda](https://killercoda.co
 https://killercoda.com/killer-shell-ckad/scenario/crd
 
 
-### Understand API deprecations
-
-Kubernetes evolves fast. Older API versions are marked as deprecated, then eventually removed in later versions.
-
-If you use a deprecated API, your manifests may fail to work after a Kubernetes upgrade.
-
-How to Recognize Deprecated APIs
-Check the apiVersion: field in your YAML.
-
-
-Helpful tools/commands
-```bash
-# Check available API versions
-k api-resources
-kubectl explain deployment | grep VERSION
-```
-
-### TASK! (#4)
-
-In the folder [task5_4](./task5_4/), you will find a file called [sadcronjob.yaml](./task5_1/sadcronjob.yaml). Deploy the manifest to your cluster and troubleshoot any issues that arise.
-
-Stuck on the way? Check the solution in [session_5/task5_4/solution.md](/session_5/task5_1/solution.md).
-
-
-### Use built-in CLI tools to monitor Kubernetes application
-
-Kubernetes provides several built-in CLI tools to monitor and troubleshoot applications running in the cluster. During our sessions, we have aleady used most of them, but let's summarize them:
-
-#### Inspect Pod and Deployment Health
-
-k get po:	Pod status (Running, CrashLoopBackOff, Pending)
-k get po -A:	All pods in all namespaces
-k get all:	All workload resources (basically all pods and their controllers + services) in current namespace
-k get all -A: When you want everything :)
-k describe po <pod>:	Detailed events, probe results, resource usage, restarts
-k logs <pod>:	Container stdout/stderr (logs)
-k logs <pod> -c <container>:	Specific container logs in a multi-container pod
-k logs <pod> --previous:	Previous container logs (if restarted)
-k logs <pod> -l app=<label>:	Filter logs by label selector
-k logs deployment/<deployment>:	Choosing one random pod from the deployment to get logs
-k logs -f <pod>:	Live log streaming
-k get deployment:	Deployment status: replicas, available, updated
-k rollout status deployment <name>:	Rollout progress
-k rollout history deployment <name>:	Deployment version history
-k describe <resource type> <name>:	Detailed resource information (events, conditions, etc.)
-k get events: Recent events in the cluster (e.g., pod restarts, scheduling issues)
-
->Note: the difference between logs and events is that logs are the output of the application running inside the container, while events are Kubernetes system messages about actions taken on resources (like pod restarts, scheduling, etc.). When debuggin, you might need to inspect both of them.
-
-#### Resource Usage Monitoring (requires metrics-server)
-
-k top po:	Shows CPU/memory usage per pod
-k top no:	Shows node-level resource usage
-
-#### Debugging / Troubleshooting
-
-k exec -it <pod> -- bash	Open a shell in a running container
-k port-forward <pod> <local port on your machine>:<remote port on the pod>	Access pod apps locally via port forwarding 
-
-```bash
-k run little-port-test --image=nginx --port=80
-k port-forward pod/little-port-test 8080:80
-
-curl http://localhost:8080
-```
-
 ### HOMEWORK! (#2)
 
 If you have not done some of the tasks during the session, you can do them at home :)
@@ -345,8 +275,6 @@ Today, we have learned:
 * How to work with persistent volumes
 * What are ServiceAccounts for and how to use them
 * What are CRDs
-* Understand API deprecations
-* Usage of built-in CLI tools to monitor Kubernetes application
 
 I  hope this session was interesting for you and you were able to learn something new here and there. Please let me know your feedback and any improvement suggestions for the future, this serie is here for you and the goal is to make it as fun and efficient as possible.
 
