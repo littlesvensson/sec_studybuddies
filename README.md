@@ -5,7 +5,7 @@ Repo with material for the POC CKAD training sessions
 - [x] Define, build and modify container images
 - [x] Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.)
 - [x] Understand multi-container Pod design patterns (e.g. sidecar, init and others)
-- [ ] Utilize persistent and ephemeral volumes
+- [x] Utilize persistent and ephemeral volumes
 
 #### Application Deployment (20%)
 - [ ] Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary)
@@ -21,13 +21,13 @@ Repo with material for the POC CKAD training sessions
 - [ ] Debugging in Kubernetes
 
 #### Application Environment, Configuration and Security (25%)
-- [ ] Discover and use resources that extend Kubernetes (CRD, Operators)
+- [x] Discover and use resources that extend Kubernetes (CRD, Operators)
 - [ ] Understand authentication, authorization and admission control
 - [ ] Understand requests, limits, quotas
 - [x] Understand ConfigMaps
 - [ ] Define resource requirements
 - [x] Create & consume Secrets
-- [ ] Understand ServiceAccounts
+- [x] Understand ServiceAccounts
 - [ ] Understand Application Security (SecurityContexts, Capabilities, etc.)
 
 #### Services and Networking (20%)

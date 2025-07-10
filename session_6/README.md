@@ -1,4 +1,4 @@
-SESSION 5, 9.7.2025 
+SESSION 6, 11.7.2025 
 ========================
 
 ## Content of the session:
@@ -7,19 +7,10 @@ SESSION 5, 9.7.2025
 * Understand API deprecations
 * Use built-in CLI tools to monitor Kubernetes application
 
-
 **Application Environment, Configuration and Security**
 * Understand requests, limits, quotas, Define resource requirements
 * Understand Application Security (SecurityContexts, Capabilities, etc.)
-* Understand authentication, authorization and admission control:
-    Knowing that Pods use service accounts
-    Understanding how to give a service account permissions (which uses Role/RoleBinding)
-    Being able to troubleshoot permission errors (e.g., app can't list pods)
-    Knowing that authorization is required when your app talks to the Kubernetes API
-
-* Service
-* Ingress, Use Ingress rules to expose applications
-* Blue/Green, Canary, Rolling updates
+* Understand authentication, authorization and admission control
 
 ### Understand API deprecations
 
@@ -38,7 +29,7 @@ k api-resources
 kubectl explain deployment | grep VERSION
 ```
 
-### TASK! (#4)
+### TASK! (#1)
 
 In the folder [task5_4](./task5_4/), you will find a file called [sadcronjob.yaml](./task5_1/sadcronjob.yaml). Deploy the manifest to your cluster and troubleshoot any issues that arise.
 
@@ -51,24 +42,30 @@ Kubernetes provides several built-in CLI tools to monitor and troubleshoot appli
 
 #### Inspect Pod and Deployment Health
 
-k get po:	Pod status (Running, CrashLoopBackOff, Pending)
-k get po -A:	All pods in all namespaces
-k get all:	All workload resources (basically all pods and their controllers + services) in current namespace
-k get all -A: When you want everything :)
-k describe po <pod>:	Detailed events, probe results, resource usage, restarts
-k logs <pod>:	Container stdout/stderr (logs)
-k logs <pod> -c <container>:	Specific container logs in a multi-container pod
-k logs <pod> --previous:	Previous container logs (if restarted)
-k logs <pod> -l app=<label>:	Filter logs by label selector
-k logs deployment/<deployment>:	Choosing one random pod from the deployment to get logs
-k logs -f <pod>:	Live log streaming
-k get deployment:	Deployment status: replicas, available, updated
-k rollout status deployment <name>:	Rollout progress
-k rollout history deployment <name>:	Deployment version history
-k describe <resource type> <name>:	Detailed resource information (events, conditions, etc.)
-k get events: Recent events in the cluster (e.g., pod restarts, scheduling issues)
+**k get po**:	Pod status (Running, CrashLoopBackOff, Pending) <br>
+**k get po -A**:	All pods in all namespaces <br>
+**k get all**:	All workload resources (basically all pods and their controllers + services) in current namespace <br>
+**k get all -A**: When you want everything :) <br>
+**k describe po <pod>**:	Detailed events, probe results, resource usage, restarts <br>
+**k logs <pod>**:	Container stdout/stderr (logs) <br>
+**k logs <pod> -c <container>**:	Specific container logs in a multi-container pod <br>
+**k logs <pod> --previous**:	Previous container logs (if restarted) <br>
+**k logs <pod> -l app=<label>**:	Filter logs by label selector <br>
+**k logs deployment/<deployment>**:	Choosing one random pod from the deployment to get logs <br>
+**k logs -f <pod>**:	Live log streaming <br>
+**k get deploy**:	Deployment status: replicas, available, updated <br>
+**k rollout status deployment <name>**:	Rollout progress <br>
+**k rollout history deployment <name>**:	Deployment version history <br>
+**k describe <resource type> <name>**:	Detailed resource information (events, conditions, etc.) <br>
+**k get events**: Recent events in the cluster (e.g., pod restarts, scheduling issues) <br>
 
 >Note: the difference between logs and events is that logs are the output of the application running inside the container, while events are Kubernetes system messages about actions taken on resources (like pod restarts, scheduling, etc.). When debuggin, you might need to inspect both of them.
+
+### TASK! (#2)
+
+In the folder [task6_2](./task6_2/), you will find manifest definitions within the file [scenario.yaml](./task6_2/scenario.yaml). Deploy them to your cluster and troubleshoot any issues that arise.
+
+Let's **DISCUSS** what you found out!
 
 #### Resource Usage Monitoring (requires metrics-server)
 
@@ -213,6 +210,11 @@ Improves container immutability:
 For CKAD, you need to know how to set securityContext above mentioned fields (and ideally understand what they mean :) .
 
 ## Understand authentication, authorization and admission control
+
+  Knowing that Pods use service accounts
+    Understanding how to give a service account permissions (which uses Role/RoleBinding)
+    Being able to troubleshoot permission errors (e.g., app can't list pods)
+    Knowing that authorization is required when your app talks to the Kubernetes API
 
 1. Authentication (Who are you?)
 Kubernetes checks who is making the request.
