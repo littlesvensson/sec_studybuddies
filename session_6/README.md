@@ -31,7 +31,7 @@ kubectl explain deployment | grep VERSION
 
 ### TASK! (#1)
 
-In the folder [task5_4](./task5_4/), you will find a file called [sadcronjob.yaml](./task5_1/sadcronjob.yaml). Deploy the manifest to your cluster and troubleshoot any issues that arise.
+In the folder [task6_1](./task6_1/), you will find a file called [sadcronjob.yaml](./task6_1/sadcronjob.yaml). Deploy the manifest to your cluster and troubleshoot any issues that arise.
 
 Stuck on the way? Check the solution in [session_5/task5_4/solution.md](/session_5/task5_1/solution.md).
 
