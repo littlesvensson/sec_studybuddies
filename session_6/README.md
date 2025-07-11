@@ -61,12 +61,6 @@ Kubernetes provides several built-in CLI tools to monitor and troubleshoot appli
 
 >Note: the difference between logs and events is that logs are the output of the application running inside the container, while events are Kubernetes system messages about actions taken on resources (like pod restarts, scheduling, etc.). When debuggin, you might need to inspect both of them.
 
-### TASK! (#2)
-
-In the folder [task6_2](./task6_2/), you will find manifest definitions within the file [scenario.yaml](./task6_2/scenario.yaml). Deploy them to your cluster and troubleshoot any issues that arise.
-
-Let's **DISCUSS** what you found out!
-
 #### Resource Usage Monitoring (requires metrics-server)
 
 k top po:	Shows CPU/memory usage per pod
@@ -83,11 +77,15 @@ k port-forward pod/little-port-test 8080:80
 
 curl http://localhost:8080
 ```
+### TASK! (#2)
 
+In the folder [task6_2](./task6_2/), you will find manifest definitions within the file [scenario.yaml](./task6_2/scenario.yaml). Apply them to your cluster and then troubleshoot any issues that arise.
+
+Let's **DISCUSS** what you found out!
 
 ## Application Security (SecurityContexts, Capabilities, etc.)
 
-For the CKAD exam, you need to understand application-level security features — mostly how to use SecurityContexts and basic Linux capabilities within pods and containers.
+For the CKAD exam, you need to understand how to use SecurityContexts and basic Linux capabilities within pods and containers.
 
 #### SecurityContext
 
@@ -95,7 +93,7 @@ A SecurityContext is used to define security-related settings for pods or contai
 
 There are two levels:
 
-a. Pod-level SecurityContext in `spec.securityContext`
+**1. Pod-level SecurityContext in `spec.securityContext`**
 Applies to all containers in the pod.
 
 ```bash
@@ -103,20 +101,7 @@ k explain pod.spec.securityContext --recursive
 ```
 
 ```yaml
-KIND:       Pod
-VERSION:    v1
-
-FIELD: securityContext <PodSecurityContext>
-
-
-DESCRIPTION:
-    SecurityContext holds pod-level security attributes and common container
-    settings. Optional: Defaults to empty.  See type description for default
-    values of each field.
-    PodSecurityContext holds pod-level security attributes and common container
-    settings. Some fields are also present in container.securityContext.  Field
-    values of container.securityContext take precedence over field values of
-    PodSecurityContext.
+...
 
 FIELDS:
   fsGroup	<integer>
@@ -144,28 +129,14 @@ FIELDS:
     runAsUserName	<string>
 ```
 
-b. Container-level SecurityContext in `spec.containers[].securityContext`
+**2. Container-level SecurityContext in `spec.containers[].securityContext`
+**
 Overrides pod-level for the specific container.
 
 ```bash
 k explain pod.spec.containers.securityContext --recursive
 ```
 ```yaml
-KIND:       Pod
-VERSION:    v1
-
-FIELD: securityContext <SecurityContext>
-
-DESCRIPTION:
-    SecurityContext defines the security options the container should be run
-    with. If set, the fields of SecurityContext override the equivalent fields
-    of PodSecurityContext. More info:
-    https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-    SecurityContext holds security configuration that will be applied to a
-    container. Some fields are present in both SecurityContext and
-    PodSecurityContext.  When both are set, the values in SecurityContext take
-    precedence.
-
 FIELDS:
   allowPrivilegeEscalation	<boolean>
   capabilities	<Capabilities>
@@ -192,22 +163,115 @@ FIELDS:
     hostProcess	<boolean>
     runAsUserName	<string>
 ```
+> Note: When you define a securityContext at both the pod and container level, the container-level settings take precedence over the pod-level settings.
 
-In CKAD, you will most likely be instructed to set the SecurityContext either for pod or particular container with specific fields given by the task.
+> Note2: In CKAD, you will most likely be instructed to set the SecurityContext either for pod or particular container with specific fields given by the task.
 
-2. Capabilities
-Linux capabilities let you drop or add fine-grained privileges.
 
-3. Privileged Mode
-Allows the container to access host-level resources (⚠ dangerous).
-
-4. Run as Non-Root
-To improve security, run containers as non-root:
-
-5. Read-only Filesystem
-Improves container immutability:
+* **runAsGroup <integer>**: specifies the primary group ID (GID) the container's main process should run as. It is the primary group the process belongs to. Each file or directory can grant read, write, execute permissions to a group (via the GID). If your process runs with a specific GID, it can access files and directories owned by that group, assuming the permissions allow it.
+* **runAsUser	<integer>**: specifies the user ID (UID) the container's main process should run as. It is the user that owns the process. This is important for file permissions, as files created by the process will be owned by this UID.
+* **runAsNonRoot	<boolean>**: ensures the container's main process does not run as the root user (UID 0). This is a security measure to prevent privilege escalation.
+* **capabilities**: Linux capabilities let you drop or add fine-grained privileges to the container's process. For example, you can drop the `NET_ADMIN` capability to prevent network configuration changes.
+* **privileged**: Allows the container to access host-level resources (which is **dangerous**).
+* **readOnlyRootFilesystem**: Makes the container's root filesystem read-only. This prevents the container from modifying files in its root directory, which can enhance security.
 
 For CKAD, you need to know how to set securityContext above mentioned fields (and ideally understand what they mean :) .
+
+### TASK! (#3)
+
+Create a Deployment named secure-app with the following specifications:
+* Namespace: studybuddies
+* Name: secure-joke
+* 1 replica.
+* curlimages/curl
+* The container should run as user ID 1000.
+* The container should use a read-only root filesystem.
+* Command: curl -s https://icanhazdadjoke.com/
+
+Once done, write your joke from the logs to the channel chat!
+
+## Resource management
+
+### 1. Resource Requests and Limits
+These control how much CPU and memory your pod can use.
+
+Requests = guaranteed minimum
+
+Limits = hard maximum
+
+```yaml
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "250m"
+  limits:
+    memory: "128Mi"
+    cpu: "500m"
+``` 
+
+What it means:
+The container gets at least 64Mi and 250m CPU
+
+The container can’t exceed 128Mi or 500m CPU
+
+CPU is in millicores (500m = 0.5 CPU)
+
+Memory is in bytes, e.g. Mi, Gi
+
+
+
+You might be required to define requests/limits in exam tasks
+
+Your pod might fail to schedule if a node doesn't have enough resources for the request
+
+If a pod uses too much memory, it might be OOMKilled if it exceeds the memory limit
+
+ResourceQuota and LimitRange
+ LimitRange
+Automatically applies default limits/requests to pods in a namespace.
+
+Prevents pods from running without resource constraints.
+
+```yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: mem-limit
+  namespace: myns
+spec:
+  limits:
+  - default:
+      memory: 256Mi
+    defaultRequest:
+      memory: 128Mi
+    type: Container
+```
+ResourceQuota
+Limits total resources in a namespace.
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-quota
+  namespace: myns
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "1"
+    requests.memory: "1Gi"
+    limits.cpu: "2"
+    limits.memory: "2Gi"
+```
+
+
+### TASK! (#4)
+
+
+
+
+
+
 
 ## Understand authentication, authorization and admission control
 
@@ -285,8 +349,6 @@ Recognize common admission control errors in kubectl describe or kubectl get eve
 
 
 
-
-## Resource management
 
 
 

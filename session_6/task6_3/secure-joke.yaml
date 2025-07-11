@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: secure-kitty
+  name: secure-kitty
+  namespace: studybuddies
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secure-kitty
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: secure-kitty
+    spec:
+      containers:
+      - name: curl-container
+        image: curlimages/curl
+        command:
+        - curl
+        - -s
+        - https://icanhazdadjoke.com/
+        securityContext:                      # Added security context for the container
+          runAsUser: 1000                     # Added security context for the container
+          readOnlyRootFilesystem: true        # Added security context for the container
+        resources: {}
+status: {}
