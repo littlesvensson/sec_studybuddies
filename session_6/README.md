@@ -193,11 +193,10 @@ Once done, write your joke from the logs to the channel chat!
 ## Resource management
 
 ### 1. Resource Requests and Limits
-These control how much CPU and memory your pod can use.
+These control how much CPU and memory your container can use. The resources are defined in the container spec of your pod under the `resources` field.
 
-Requests = guaranteed minimum
-
-Limits = hard maximum
+**Requests** = guaranteed minimum
+**Limits** = hard maximum
 
 ```yaml
 resources:
@@ -209,28 +208,25 @@ resources:
     cpu: "500m"
 ``` 
 
-What it means:
-The container gets at least 64Mi and 250m CPU
-
-The container can’t exceed 128Mi or 500m CPU
+**What it means** 
+* The container gets at least 64Mi and 250m CPU
+* The container can’t exceed 128Mi or 500m CPU
 
 CPU is in millicores (500m = 0.5 CPU)
+Memory is in bytes (e.g. Mi, Gi)
 
-Memory is in bytes, e.g. Mi, Gi
+>Note: In the context of CKAD, you might be required to define requests/limits in exam tasks
+
+### Why Use Requests and Limits?
+* **Resource allocation**: Helps Kubernetes schedule pods on nodes with enough resources.
+* **Performance**: Ensures your app has enough resources to run smoothly.
+* **Stability**: Prevents a single pod from consuming all resources and affecting others.
 
 
+>Note: Your pod might fail to schedule if a node doesn't have enough resources for the request. If a pod uses too much memory, it might be OOMKilled if it exceeds the memory limit.
 
-You might be required to define requests/limits in exam tasks
-
-Your pod might fail to schedule if a node doesn't have enough resources for the request
-
-If a pod uses too much memory, it might be OOMKilled if it exceeds the memory limit
-
-ResourceQuota and LimitRange
- LimitRange
-Automatically applies default limits/requests to pods in a namespace.
-
-Prevents pods from running without resource constraints.
+### LimitRange
+Automatically applies default limits/requests to pods in a namespace. This prevents pods from running without resource constraints.
 
 ```yaml
 apiVersion: v1
@@ -246,8 +242,9 @@ spec:
       memory: 128Mi
     type: Container
 ```
-ResourceQuota
-Limits total resources in a namespace.
+
+### ResourceQuota 
+Limits total resources in a namespace. 
 
 ```yaml
 apiVersion: v1
@@ -267,87 +264,130 @@ spec:
 
 ### TASK! (#4)
 
-
-
-
-
+In the folder [task6_4](./task6_4/), you will find a file called [pod.yaml](./task6_4/pod.yaml). Adjust the manifest by addint the following specifications:
+* The container requests 100Mi memory and 200m CPU
+* The container limits memory to 256Mi and CPU to 500m
 
 
 ## Understand authentication, authorization and admission control
 
-  Knowing that Pods use service accounts
-    Understanding how to give a service account permissions (which uses Role/RoleBinding)
-    Being able to troubleshoot permission errors (e.g., app can't list pods)
-    Knowing that authorization is required when your app talks to the Kubernetes API
+Knowing that Pods use service accounts
+Understanding how to give a service account permissions (which uses Role/RoleBinding)
+Being able to troubleshoot permission errors (e.g., app can't list pods)
+Knowing that authorization is required when your app talks to the Kubernetes API
 
-1. Authentication (Who are you?)
-Kubernetes checks who is making the request.
+### 1. Authentication (Who are you?)
+
+Authentication is about verifying the identity of a user or service (e.g., via kubeconfig or service account tokens). You don’t configure it, but it determines who can interact with the cluster. Kubernetes checks who is making the request.
 
 This could be a user, service account, or external identity (via certificates, tokens, etc.).
 
 Most commonly in CKAD, this shows up when:
+* Your pod is running with a service account
+* You get Unauthorized errors if the kubeconfig is wrong or permissions are missing
 
-Your pod is running with a service account
+###  2. Authorization
 
-You get Unauthorized errors if the kubeconfig is wrong or permissions are missing
+Authorization controls what an authenticated user or service can do in the cluster, using RBAC (Role, RoleBinding, etc.). In CKAD, you're expected to create and use these roles to grant specific permissions to service accounts or users.
 
-CKAD-level takeaway:
-Be aware that service accounts are how workloads authenticate to the API server.
+After identifying who, Kubernetes checks what they’re allowed to do. In the context of CKAD, this is often about giving your application the right permissions to access Kubernetes resources in the forme of RBAC - Role-Based Access Control.
 
-2. Authorization (What can you do?)
-After identifying who, Kubernetes checks what they’re allowed to do.
+#### Role-Based Access Control (RBAC)
 
-It uses things like:
+RBAC is the most common way to control access in Kubernetes. It uses Roles and RoleBindings to define what actions users or service accounts can perform on resources. There is also cluster-wide RBAC using ClusterRoles and ClusterRoleBindings, but that's not typically needed for CKAD.
 
-RBAC (Role-Based Access Control) — the most common
+Roles define permissions for resources in a namespace, while ClusterRoles define permissions across the entire cluster.
+Rolebindings bind a Role to a user or service account, granting them the permissions defined in the Role.
 
-kubectl auth can-i to test permissions
+#### Example Role and RoleBinding
 
-CKAD-level takeaway:
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: ninjanamespace
+  name: pod-ninja
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+```
 
-Know how to check if your service account or user can perform an action:
+It is possible to do it imperatively as well:
 
-bash
-Copy
-Edit
-kubectl auth can-i get pods --as system:serviceaccount:myns:myaccount
-3. Admission Control (Should we allow it?)
-Runs after authentication and authorization, before the object is persisted.
+```bash
+kubectl create role pod-ninga --verb=get,list,watch --resource=pods --namespace ninjanamespace
+``` 
 
-Controls like:
+If you want to use all verbs:
 
-ValidatingAdmissionWebhook
+```bash
+kubectl create role pod-ninja --verb='*' --resource=pods --namespace ninjanamespace
+``` 
 
-MutatingAdmissionWebhook
+Rolebinging
+If we create a Role, we defined what is allowed. But if we really want to use it, we need to connect this role to either a user or a service account. This is done with RoleBinding.
 
-LimitRanges, PodSecurity, ResourceQuotas
+Here some example from the docs:
 
- CKAD-level takeaway:
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "jaja" to read pods in the "default" namespace.
+# You need to already have a Role named "pod-ninja" in that namespace.
+kind: RoleBinding
+metadata:
+  name: pod-admin-binding
+  namespace: studybuddies
+subjects:
+# You can specify more than one "subject"
+- kind: User
+  name: jaja # "name" is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  # "roleRef" specifies the binding to a Role 
+  kind: Role #this must be Role 
+  name: pod-ninja # this must match the name of the Role you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+  ```
 
-You may encounter errors from things like a validating webhook or namespace quota.
+  Good news! We can create RoleBindings imperatively as well:
 
-For example:
+```bash
+k create rolebinding pod-admin-binding --role=pod-ninja --user=jaja --namespace studybuddies
+```
+In general:
 
-"Pod denied: CPU request too high"
+```bash
+k create rolebinding <binding name> --role=<role name> --serviceaccount=<namespace>:<serviceaccount> --namespace studybuddies
+```
+How to find out what permissions a user or service account has?
 
-"Missing label required by policy"
+```bash
+k auth can-i <verb> <resource type> --as system:serviceaccount:<namespace>:<serviceaccount>
+```
 
- In Practice
-Component	What it does	CKAD relevance
-Authentication	Identifies the requestor	Mostly behind the scenes
-Authorization	Approves/rejects based on roles	Important when using service accounts, RBAC
-Admission control	Final checks/patches before storing	May block objects if they violate policy
+### 3. Admission Control
+Admission controllers enforce policies on objects after authentication and authorization, but before they’re persisted. In CKAD, you're not asked to configure them, but should understand how they might reject or mutate your resources (e.g., missing resource limits or disallowed security contexts).
 
- What You Should Practice
-Create and use service accounts
+### TASK! (#5)
 
-Set automountServiceAccountToken: false when needed
+Create a Role named `loyal-role` in the `studybuddies` namespace that allows to read and list pods. 
+Then create a RoleBinding that binds this role to the ServiceAccount `loyalservant` we created some time ago within the same namespace.
 
-Use kubectl auth can-i to troubleshoot permissions
+Once done, send some happiness to the channel chat!
 
-Recognize common admission control errors in kubectl describe or kubectl get events
+## Wrap up
+I don't know how, but the sixth part of our Study Buddies series is successfully finished :)
 
+Today, we have learned:
 
+* a bit about API deprecations
+* we repeated some of the useful kubectl commands for inspecting our enviroment
+* What are requests, limits, quotas and how to define them
+* We learned about SecurityContexts and how to use them
+* We learned about authentication, authorization and admission control in Kubernetes
+
+That is something! We have covered a LOT up until now, soon you will be ready for the exam! In case of any feedback that could help us improve the sessions, please let me know - the content is here for you and we want to have it as efficient and useful and fun as possible.
 
 
 
