@@ -1,7 +1,7 @@
 Metrics server can be install through the following manifest:
 
 ```bash
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+k apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 ```
 
 The metrics-server needs extra flags due to certificate issues. You may need to edit the deployment like this:

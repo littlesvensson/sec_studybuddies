@@ -63,13 +63,13 @@ Kubernetes provides several built-in CLI tools to monitor and troubleshoot appli
 
 #### Resource Usage Monitoring (requires metrics-server)
 
-k top po:	Shows CPU/memory usage per pod
-k top no:	Shows node-level resource usage
+**k top po**:	Shows CPU/memory usage per pod <br>
+**k top no**:	Shows node-level resource usage <br>
 
 #### Debugging / Troubleshooting
 
-k exec -it <pod> -- bash	Open a shell in a running container
-k port-forward <pod> <local port on your machine>:<remote port on the pod>	Access pod apps locally via port forwarding 
+**k exec -it <pod> -- bash**	Open a shell in a running container <br>
+**k port-forward <pod> < local port on your machine > : < remote port on the pod >**	Access pod apps locally via port forwarding <br>
 
 ```bash
 k run little-port-test --image=nginx --port=80
