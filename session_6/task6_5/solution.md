@@ -2,7 +2,8 @@ For both Role and RoleBinding, the most efficient way how to create them during 
 
 ```bash
 k create role loyal-role --namespace=studybuddies --verb=get,list --resource=pods
-``
+```
+
 ```bash
 k create rolebinding loyal-role-binding --namespace=studybuddies --role=loyal-role --serviceaccount=studybuddies:loyalservant
 ```
