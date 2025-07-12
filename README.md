@@ -14,21 +14,21 @@ Repo with material for the POC CKAD training sessions
 - [ ] Kustomize
 
 #### Application Observability and Maintenance (15%)
-- [ ] Understand API deprecations
+- [x] Understand API deprecations
 - [x] Implement probes and health checks
-- [ ] Use built-in CLI tools to monitor Kubernetes applications
+- [x] Use built-in CLI tools to monitor Kubernetes applications
 - [x] Utilize container logs
-- [ ] Debugging in Kubernetes
+- [x] Debugging in Kubernetes
 
 #### Application Environment, Configuration and Security (25%)
 - [x] Discover and use resources that extend Kubernetes (CRD, Operators)
 - [ ] Understand authentication, authorization and admission control
-- [ ] Understand requests, limits, quotas
+- [x] Understand requests, limits, quotas
 - [x] Understand ConfigMaps
-- [ ] Define resource requirements
+- [x] Define resource requirements
 - [x] Create & consume Secrets
 - [x] Understand ServiceAccounts
-- [ ] Understand Application Security (SecurityContexts, Capabilities, etc.)
+- [x] Understand Application Security (SecurityContexts, Capabilities, etc.)
 
 #### Services and Networking (20%)
 - [ ] Demonstrate basic understanding of NetworkPolicies
