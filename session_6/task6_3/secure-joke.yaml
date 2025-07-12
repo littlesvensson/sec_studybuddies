@@ -3,20 +3,20 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: secure-kitty
-  name: secure-kitty
+    app: secure-joke
+  name: secure-joke
   namespace: studybuddies
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: secure-kitty
+      app: secure-joke
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: secure-kitty
+        app: secure-joke
     spec:
       containers:
       - name: curl-container

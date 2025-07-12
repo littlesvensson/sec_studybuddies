@@ -87,6 +87,3 @@ k apply -f secure-joke.yaml
 ```
 
 Tadaaaa! Our secure-joke deployment is ready to go!
-
-```bash
-
