@@ -1,9 +1,168 @@
 SESSION 8, 16.7.2025 
 ========================
 
+* Ingress, Use Ingress rules to expose applications
+* Blue/Green, Canary, Rolling updates
+* Provide and troubleshoot access to applications via services
 * Demonstrate basic understanding of NetworkPolicies
 * Helm (just basics for CKAD)
 * Kustomize (just basics for CKAD)
+
+
+## Ingress
+
+An Ingress is an API object that:
+
+Exposes HTTP/HTTPS routes from outside the cluster to services inside.
+
+Acts like a reverse proxy: routes traffic based on hostnames and paths.
+
+Requires an Ingress Controller (e.g., NGINX Ingress Controller) to function.
+
+What You Need to Know for CKAD
+1. Understand Basic Ingress YAML
+2. Know That an Ingress Controller Is Required
+3. Use kubectl port-forward for testing
+
+
+
+Common Ingress Tasks in CKAD
+You may be asked to:
+
+Create an Ingress to expose a service
+
+Route multiple paths or hostnames
+
+Fix an Ingress that's misconfigured (e.g., wrong pathType, wrong service name)
+
+
+5. Optional: TLS Support
+You’re not required to deeply configure TLS, but should recognize a TLS block:
+
+```yaml
+tls:
+- hosts:
+  - myapp.example.com
+  secretName: tls-secret
+```
+
+
+## Blue/Green Deployment (CKAD Level)
+
+Concept:
+Run two separate versions of the app (e.g., v1 = "blue", v2 = "green") in parallel.
+Switch traffic from blue to green by updating the Service selector.
+
+What You Should Know:
+Deploy two Deployments:
+
+blue-deployment (label version: blue)
+green-deployment (label version: green)
+
+The Service routes traffic based on version.
+
+### Task! (#3)
+
+You already have a Deployment myapp-blue running in the studybuddies namespace.
+Your task is to:
+
+Deploy a new version of the app called myapp-green with label version: green.
+
+Update the existing Service myapp-service to route traffic to the green version instead of blue.
+
+
+
+# Service pointing to blue
+selector:
+  app: myapp
+  version: blue
+
+
+To switch traffic to green, change the selector to version: green.
+
+Skills CKAD tests:
+Modify Service.spec.selector
+
+Label Deployments appropriately
+
+Understand impact of traffic shifting
+
+
+## Canary Deployment
+Concept:
+Deploy a new version (e.g., v2) to a subset of users by running a small number of pods alongside the stable version (v1).
+
+Concept:
+Deploy a new version (e.g., v2) to a subset of users by running a small number of pods alongside the stable version (v1).
+
+What You Should Know:
+Create a second Deployment with fewer replicas and a different label (e.g., version: canary)
+
+Use label selectors to route some traffic to canary
+
+Either:
+
+Add both v1 and canary Pods under same Service, OR
+
+Create two Services, and control traffic split externally (e.g., via Ingress or client-side logic)
+
+```yaml
+# Stable Deployment (v1)
+metadata:
+  name: myapp-v1
+  labels:
+    app: myapp
+    version: v1
+
+# Canary Deployment (v2)
+metadata:
+  name: myapp-v2
+  labels:
+    app: myapp
+    version: canary
+
+# Shared Service selects both
+spec:
+  selector:
+    app: myapp
+```
+
+If v1 has 5 pods and canary has 1, about 1/6 of requests will hit canary (round-robin).
+
+CKAD Skills:
+Create multiple Deployments
+
+Control traffic using replica count
+
+Understand basic traffic splitting via label-based Services
+
+In CKAD, You Might Be Asked To:
+Deploy a new canary version alongside the current one
+
+Change a Service to point to the new version (blue/green)
+
+Scale down the old deployment after verification
+
+### TASK! (#4)
+
+You already have a Deployment myapp-stable with:
+
+5 replicas
+label: version: stable
+Create a new Deployment myapp-canary:
+
+1 replica
+label: version: canary
+image: nginx:1.21
+container port: 8080
+
+Update the Service myapp-service (already selects app: myapp) to include both versions (which already happens if both have app: myapp).
+
+💡 Result:
+5/6 of requests go to stable
+1/6 go to canary
+
+
 
 ## Network Policies
 

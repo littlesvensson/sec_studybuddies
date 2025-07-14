@@ -2,10 +2,13 @@ SESSION 7, 14.7.2025
 ========================
 
 * Understand authentication, authorization and admission control
-* Service
-* Ingress, Use Ingress rules to expose applications
-* Blue/Green, Canary, Rolling updates
-* Provide and troubleshoot access to applications via services
+* Role-Based Access Control (RBAC) on namespace level
+* Services:
+ * ClusterIP
+ * NodePort
+ * LoadBalancer
+ * ExternalName
+ * Headless
 
 ## Understand authentication, authorization and admission control
 
@@ -301,8 +304,9 @@ k exec -it curl-test -n studybuddies -- curl cute-external-service/get
 >Note: httpbin.org is a free, open-source HTTP request & response testing service. It's designed for developers to inspect HTTP requests, simulate different kinds of responses and test HTTP clients (e.g., curl, Postman, code). /get is one of its endpoints that returns a JSON response with details about the request made to it.
 
 
-Headless Service: What It Is
-A Headless Service is a Service with no ClusterIP. It doesn’t load balance; instead, it lets you reach individual Pod IPs directly.
+### Headless Service
+
+A Headless Service is a Service with no ClusterIP. It doesn’t load balance - instead, it lets you reach individual Pod IPs directly.
 
 ```yaml
 apiVersion: v1
@@ -317,18 +321,7 @@ spec:
   ports:
     - port: 80
 ```
-
-clusterIP: None disables the default virtual IP.
-
-DNS queries return A records for each Pod backing the service.
-
-Useful for:
-
-StatefulSets
-
-Peer-to-peer apps (e.g. databases, message queues)
-
-When each Pod needs to be contacted individually
+Headless services are most commonly used with StatefulSets, where each pod needs a stable DNS name.
 
 
 ```yaml
@@ -338,7 +331,7 @@ metadata:
   name: nginx
   namespace: studybuddies
 spec:
-  clusterIP: None  # Headless
+  clusterIP: None                       # None = Headless
   selector:
     app: nginx
   ports:
@@ -352,7 +345,7 @@ metadata:
   name: nginx
   namespace: studybuddies
 spec:
-  serviceName: nginx   # must match the headless service name
+  serviceName: nginx                    # Must match the headless service name
   replicas: 3
   selector:
     matchLabels:
@@ -369,190 +362,31 @@ spec:
             - containerPort: 80
 ```
 
+Let's try it together! In the folder [headless](session_7/headless), you will find two files: [service.yaml](session_7/headless/service.yaml) and [statefulset.yaml](session_7/headless/statefulset.yaml). Apply them in the `studybuddies` namespace.
 
-What Happens:
-Kubernetes creates:
-
-nginx-0, nginx-1, nginx-2 pods (stable identities)
-
-DNS entries:
-
-nginx-0.nginx.studdybuddies.svc.cluster.local
-
-nginx-1.nginx.studdybuddies.svc.cluster.local
-
-etc.
-
-The headless service enables direct DNS resolution to Pod IPs — no load balancing.
+And now, let's test it by running a curl command in the pod:
 
 
+```bash
+k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never -- sh
 
-kubectl exec -it some-pod -n studybuddies -- nslookup nginx-0.nginx
-
-
-
-In CKAD, You Must Be Able To:
-✅ Create a Service YAML from scratch or imperatively (e.g. kubectl expose)
-
-✅ Connect Pods to Services using labels/selectors
-
-✅ Use kubectl port-forward for quick access in exam
-
-✅ Debug Service routing (kubectl get endpoints, curl, etc.)
-
-✅ Understand how DNS resolution works (my-service.my-namespace.svc.cluster.local)
-
-
-## Ingress
-
-An Ingress is an API object that:
-
-Exposes HTTP/HTTPS routes from outside the cluster to services inside.
-
-Acts like a reverse proxy: routes traffic based on hostnames and paths.
-
-Requires an Ingress Controller (e.g., NGINX Ingress Controller) to function.
-
-What You Need to Know for CKAD
-1. Understand Basic Ingress YAML
-2. Know That an Ingress Controller Is Required
-3. Use kubectl port-forward for testing
-
-
-
-Common Ingress Tasks in CKAD
-You may be asked to:
-
-Create an Ingress to expose a service
-
-Route multiple paths or hostnames
-
-Fix an Ingress that's misconfigured (e.g., wrong pathType, wrong service name)
-
-
-5. Optional: TLS Support
-You’re not required to deeply configure TLS, but should recognize a TLS block:
-
-```yaml
-tls:
-- hosts:
-  - myapp.example.com
-  secretName: tls-secret
+curl echo-0.echo-headless.studybuddies.svc.cluster.local:8080
 ```
 
 
-## Blue/Green Deployment (CKAD Level)
+>Notes: In the context of CKAD, you should be able to create a Service YAML from scratch or imperatively, connect pods to services using labels/selectors and understand how DNS resolution works (`my-service.my-namespace.svc.cluster.local`)
 
-Concept:
-Run two separate versions of the app (e.g., v1 = "blue", v2 = "green") in parallel.
-Switch traffic from blue to green by updating the Service selector.
+## Wrap up
+7th session is over!
 
-What You Should Know:
-Deploy two Deployments:
+Today, we have learned:
+* Understand authentication, authorization and admission control
+* Role-Based Access Control (RBAC) on namespace level
+* How to work with Services: ClusterIP, NodePort, LoadBalancer end even ExternalName and Headless as bonus
 
-blue-deployment (label version: blue)
-green-deployment (label version: green)
-
-The Service routes traffic based on version.
-
-### Task! (#3)
-
-You already have a Deployment myapp-blue running in the studybuddies namespace.
-Your task is to:
-
-Deploy a new version of the app called myapp-green with label version: green.
-
-Update the existing Service myapp-service to route traffic to the green version instead of blue.
+Great job, buddies! You are getting closer to the CKAD exam ;)
 
 
 
-# Service pointing to blue
-selector:
-  app: myapp
-  version: blue
 
-
-To switch traffic to green, change the selector to version: green.
-
-Skills CKAD tests:
-Modify Service.spec.selector
-
-Label Deployments appropriately
-
-Understand impact of traffic shifting
-
-
-## Canary Deployment
-Concept:
-Deploy a new version (e.g., v2) to a subset of users by running a small number of pods alongside the stable version (v1).
-
-Concept:
-Deploy a new version (e.g., v2) to a subset of users by running a small number of pods alongside the stable version (v1).
-
-What You Should Know:
-Create a second Deployment with fewer replicas and a different label (e.g., version: canary)
-
-Use label selectors to route some traffic to canary
-
-Either:
-
-Add both v1 and canary Pods under same Service, OR
-
-Create two Services, and control traffic split externally (e.g., via Ingress or client-side logic)
-
-```yaml
-# Stable Deployment (v1)
-metadata:
-  name: myapp-v1
-  labels:
-    app: myapp
-    version: v1
-
-# Canary Deployment (v2)
-metadata:
-  name: myapp-v2
-  labels:
-    app: myapp
-    version: canary
-
-# Shared Service selects both
-spec:
-  selector:
-    app: myapp
-```
-
-If v1 has 5 pods and canary has 1, about 1/6 of requests will hit canary (round-robin).
-
-CKAD Skills:
-Create multiple Deployments
-
-Control traffic using replica count
-
-Understand basic traffic splitting via label-based Services
-
-In CKAD, You Might Be Asked To:
-Deploy a new canary version alongside the current one
-
-Change a Service to point to the new version (blue/green)
-
-Scale down the old deployment after verification
-
-### TASK! (#4)
-
-You already have a Deployment myapp-stable with:
-
-5 replicas
-label: version: stable
-Create a new Deployment myapp-canary:
-
-1 replica
-label: version: canary
-image: nginx:1.21
-container port: 8080
-
-Update the Service myapp-service (already selects app: myapp) to include both versions (which already happens if both have app: myapp).
-
-💡 Result:
-5/6 of requests go to stable
-1/6 go to canary
 
