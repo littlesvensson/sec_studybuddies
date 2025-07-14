@@ -7,9 +7,7 @@ SESSION 7, 14.7.2025
 * Blue/Green, Canary, Rolling updates
 * Provide and troubleshoot access to applications via services
 
-
 ## Understand authentication, authorization and admission control
-
 
 ![Authentication, Authorization, Admission Control](../assets/authentication_authorisation_admission.jpg) <br>
 Image source: [Kodekloud](https://notes.kodekloud.com/docs/Certified-Kubernetes-Application-Developer-CKAD/Security/Admission-Controllers)
@@ -152,18 +150,19 @@ Once done, send some happiness to the channel chat!
 
 Services in Kubernetes provide stable networking for Pods, allowing them to communicate with each other and with external clients. They abstract away the underlying Pod IPs, which can change over time.
 
-What a Service Does
-A Service provides a stable network identity (IP + DNS name) to a set of Pods.
-It routes traffic to matching Pods using label selectors.
-It decouples clients from Pods — which may come and go.
+What are the main functions of a Service:
+* provides a stable network identity (IP + DNS name) to a set of Pods.
+* routes traffic to matching Pods using label selectors.
+* decouples clients from Pods — which may come and go.
+* provide load balancing across Pods (not only the LoadBalancer type :) )
 
 
- Types of Services (Know These!)
-Type	Purpose	CKAD Notes
-ClusterIP	Exposes service within the cluster	Default, used for internal communication
-NodePort	Exposes service on a port on each Node’s IP	Useful for local testing, not recommended for production
-LoadBalancer	Uses cloud provider's external LB	For public access in cloud setups
-ExternalName	Maps to an external DNS	Rarely used in CKAD; just know what it is
+**Types of Services**
+**ClusterIP**:	Exposes service within the cluster	Default, used for internal communication
+**NodePort**	Exposes service on a port on each Node’s IP	Useful for local testing, not recommended for production
+**LoadBalancer**	Uses cloud provider's external LB	For public access in cloud setups
+**ExternalName**	Maps to an external DNS	Rarely used in CKAD; just know what it is
+**HeadLess**	No ClusterIP, direct Pod access	Useful for StatefulSets or peer-to-peer apps
 
 ### ClusterIP (default)
 
@@ -173,14 +172,39 @@ The default type, ClusterIP, exposes the service on a cluster-internal IP. This 
 apiVersion: v1
 kind: Service
 metadata:
-  name: my-service
+  name: my-beautiful-service
 spec:
   selector:
-    app: myapp
+    app: my-beautiful-app
   ports:
-    - port: 80        # Service port
-      targetPort: 8080 # Container port
+    - port: 80                               # Service port
+      targetPort: 8080                       # Container port
 ```
+
+```bash
+k expose <resource> <name> --port=<external port> [--target-port=<container-port>] [--type=<service-type>] [--name=<service-name>] [--protocol=TCP|UDP]
+
+k expose deployment my-beautiful-app --port=80 --target-port=8080
+```
+
+>Note: this will not work if you do not have a Deployment named `my-beautiful-app` in the current namespace.
+
+**What It Does**
+- Creates a Service of the specified type (default: ClusterIP)
+- Points it to the target port on the selected resource (e.g., a pod or deployment). In case you will not specify the target port, it will use the first container port of the Pod.
+
+### TASK! (#2)
+
+There is a deployment manifest definition called [my-beautiful-app.yaml](task7_2/my-beautiful-app.yaml) in the [task7_2](task7_2) folder. 
+
+- in the Playground, create a new namespace called `studybuddies`
+- apply it to create the Deployment in the `studybuddies` namespace
+- expose it as a ClusterIP Service named `my-beautiful-service` that targets Pods with label `app=my-beautiful-app` and forwards traffic from port 80 to container port 8080
+
+Once done, express your happiness in the channel chat!
+
+![happiness](../assets/superhappy.jpg) <br>
+
 
 ### NodePort
 NodePort exposes the service on a static port on each Node's IP. This allows external traffic to access the service by hitting any Node's IP and the specified port. It's useful for local testing, but not recommended for production.
@@ -195,6 +219,25 @@ spec:
       targetPort: 8080
       nodePort: 30036
 ```
+
+```bash
+k expose <resource> <name> --port=<external port> [--target-port=<container-port>] [--type=<service-type>] [--name=<service-name>] [--protocol=TCP|UDP]
+
+k expose deployment my-beautiful-app --port=80 --target-port=8080 --type=NodePort --name=my-beautiful-nodeport-service --namespace=studybuddies
+```
+
+### TASK! (#3)
+
+Please, do this task in the [Killercoda Playground](https://killercoda.com/playgrounds/scenario/kubernetes) instead of your local Kubernetes cluster.
+
+There is a deployment manifest definition called [my-beautiful-nodeport-app.yaml](task7_2/my-beautiful-nodeport-app.yaml) in the [task7_3](task7_3) folder. 
+
+- apply it to create the Deployment in the `studybuddies` namespace.
+- expose it as a ClusterIP Service named `my-beautiful-nodeport-service` that targets Pods with label `app=my-beautiful-app` and forwards traffic from port 80 to container port 8080
+
+Once done, express your happiness in the channel chat!
+
+
 ### LoadBalancer
 LoadBalancer is used in cloud environments to expose the service externally. It creates an external load balancer that routes traffic to the service. This is the most common way to expose services in production.
 
@@ -209,64 +252,53 @@ spec:
   selector:
     app: myapp
   ports:
-    - port: 80          # Exposed service port
-      targetPort: 8080  # Container port
+    - port: 80                                     # Exposed service port
+      targetPort: 8080                             # Container port
 ```
 
-What this does:
-Exposes your app to external traffic via a cloud provider's LoadBalancer.
+*What this does:*
+- Exposes your app to external traffic via a cloud provider's LoadBalancer.
+- The service is reachable via an external IP (automatically assigned, will not work with local environment).
+- Internally, traffic is routed to Pods with label app: myapp, hitting port 8080 on the container.
 
-The service is reachable via an external IP (automatically assigned).
-
-Internally, traffic is routed to Pods with label app: myapp, hitting port 8080 on the container.
-
-✅ Use this when:
-You're in a cloud environment (AWS, GCP, Azure, etc.)
-
-You need external access to your app.
-
-You want automatic IP + DNS assignment via the provider.
+*Use this when:
+- You're in a cloud environment (Openstac, AWS, GCP, Azure...)
+- You need external access to your app.
+- You want automatic IP + DNS assignment via the provider.
 
 
+### BONUS: ExternalName Service
 
+A Service of type ExternalName creates a DNS alias inside the cluster.
 
- Important Concepts
-Selector-based services: Automatically route to matching Pods.
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cute-external-service
+  namespace: studybuddies
+spec:
+  type: ExternalName
+  externalName: httpbin.org
+```
 
-TargetPort: Port on the container.
+In the example above, when looking up the host cute-external-service.prod.svc.cluster.local, the cluster DNS Service returns a CNAME record with the value httpbin.org.
 
-Port: Port exposed by the Service.
+Let's try it together!
 
-NodePort: Exposed on every node at a static port (30000–32767).
+In the folder [externalname](session_7/externalname), you will find two files: [pod.yaml](session_7/externalname/pod.yaml) and [service.yaml](session_7/externalname/service.yaml). Apply them in the `studybuddies` namespace.
 
-In CKAD, You Must Be Able To:
-✅ Create a Service YAML from scratch or imperatively (e.g. kubectl expose)
+```bash
+k apply -f session_7/externalname/pod.yaml
+k apply -f session_7/externalname/service.yaml
+```
+Now, let's test it by running a curl command in the pod:
 
-✅ Connect Pods to Services using labels/selectors
+```bash
+k exec -it curl-test -n studybuddies -- curl cute-external-service/get
+```
 
-✅ Use kubectl port-forward for quick access in exam
-
-✅ Debug Service routing (kubectl get endpoints, curl, etc.)
-
-✅ Understand how DNS resolution works (my-service.my-namespace.svc.cluster.local)
-
-
-kubectl expose pod mypod --port=80 --target-port=8080 --name=mypod-service --type=ClusterIP
-
-
-Summary Cheat Sheet
-Key Concept	What You Need to Know
-Service types	ClusterIP, NodePort, LoadBalancer
-Ports	port, targetPort, nodePort
-Selector	Matches Pods using labels
-DNS names	Services have stable DNS within the cluster
-Debugging	Use kubectl get endpoints, describe, logs
-
-
-
-LoadBalancer requires a cloud provider.
-
-In CKAD exam (which runs in a local cluster), LoadBalancer may not assign an external IP — you’ll often use port-forward or NodePort instead.
+>Note: httpbin.org is a free, open-source HTTP request & response testing service. It's designed for developers to inspect HTTP requests, simulate different kinds of responses and test HTTP clients (e.g., curl, Postman, code). /get is one of its endpoints that returns a JSON response with details about the request made to it.
 
 
 Headless Service: What It Is
@@ -357,17 +389,18 @@ The headless service enables direct DNS resolution to Pod IPs — no load balanc
 
 kubectl exec -it some-pod -n studybuddies -- nslookup nginx-0.nginx
 
-### TASK! (#2)
-Create a ClusterIP Service named backend-service in the studybuddies namespace.
 
-This Service should:
 
-Target Pods with label app=backend
+In CKAD, You Must Be Able To:
+✅ Create a Service YAML from scratch or imperatively (e.g. kubectl expose)
 
-Forward traffic from port 80 to container port 5000
+✅ Connect Pods to Services using labels/selectors
 
-Make sure the backend is accessible from within the cluster using the name:
-backend-service.studdybuddies.svc.cluster.local
+✅ Use kubectl port-forward for quick access in exam
+
+✅ Debug Service routing (kubectl get endpoints, curl, etc.)
+
+✅ Understand how DNS resolution works (my-service.my-namespace.svc.cluster.local)
 
 
 ## Ingress

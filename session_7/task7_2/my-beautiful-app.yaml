@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-beautiful-nodeport-app
+  name: my-beautiful-app
   namespace: studybuddies
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: my-beautiful-nodeport-app
+      app: my-beautiful-app
   template:
     metadata:
       labels:
-        app: my-beautiful-nodeport-app
+        app: my-beautiful-app
     spec:
       containers:
       - name: echo
         image: hashicorp/http-echo
         args:
-          - "-text=Hello from your fancy beautiful nodeport app!"
+          - "-text=Hello from my-beautiful-app"
           - -listen=:8080
         ports:
         - containerPort: 8080

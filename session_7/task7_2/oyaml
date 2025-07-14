@@ -1,0 +1,2 @@
+NAME                       TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)                      AGE
+ingress-nginx-controller   LoadBalancer   10.96.12.24   <pending>     80:31520/TCP,443:32696/TCP   2m31s

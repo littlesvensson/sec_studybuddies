@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cute-external-service
+  namespace: studybuddies
+spec:
+  type: ExternalName
+  externalName: httpbin.org
