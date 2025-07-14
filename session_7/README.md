@@ -215,7 +215,6 @@ k expose deployment my-beautiful-app --port=80 --target-port=8080
 
 There is a deployment manifest definition called [my-beautiful-app.yaml](task7_2/my-beautiful-app.yaml) in the [task7_2](task7_2) folder. 
 
-- in the Playground, create a new namespace called `studybuddies`
 - apply it to create the Deployment in the `studybuddies` namespace
 - expose it as a ClusterIP Service named `my-beautiful-service` that targets Pods with label `app=my-beautiful-app` and forwards traffic from port 80 to container port 8080
 
@@ -248,148 +247,15 @@ k expose deployment my-beautiful-app --port=80 --target-port=8080 --type=NodePor
 
 Please, do this task in the [Killercoda Playground](https://killercoda.com/playgrounds/scenario/kubernetes) instead of your local Kubernetes cluster.
 
-There is a deployment manifest definition called [my-beautiful-nodeport-app.yaml](task7_2/my-beautiful-nodeport-app.yaml) in the [task7_3](task7_3) folder. 
+- wait for the playground to be ready
+- in the Playground, create a new namespace called `studybuddies`
+
+There is a deployment manifest definition called [deployment.yaml](task7_2/deployment.yaml) in the [task7_3](task7_3) folder. 
 
 - apply it to create the Deployment in the `studybuddies` namespace.
-- expose it as a ClusterIP Service named `my-beautiful-nodeport-service` that targets Pods with label `app=my-beautiful-app` and forwards traffic from port 80 to container port 8080
+- expose it as a ClusterIP Service named `my-beautiful-nodeport-service` that targets Pods with label `my-beautiful-nodeport-app` and forwards traffic from port 80 to container port 8080
 
 Once done, express your happiness in the channel chat!
-
-
-### LoadBalancer
-LoadBalancer is used in cloud environments to expose the service externally. It creates an external load balancer that routes traffic to the service. This is the most common way to expose services in production.
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: myapp-service
-  namespace: studybuddies
-spec:
-  type: LoadBalancer
-  selector:
-    app: myapp
-  ports:
-    - port: 80                                     # Exposed service port
-      targetPort: 8080                             # Container port
-```
-
-*What this does:*
-- Exposes your app to external traffic via a cloud provider's LoadBalancer.
-- The service is reachable via an external IP (automatically assigned, will not work with local environment).
-- Internally, traffic is routed to Pods with label app: myapp, hitting port 8080 on the container.
-
-*Use this when:
-- You're in a cloud environment (Openstac, AWS, GCP, Azure...)
-- You need external access to your app.
-- You want automatic IP + DNS assignment via the provider.
-
-
-### BONUS: ExternalName Service
-
-A Service of type ExternalName creates a DNS alias inside the cluster.
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: cute-external-service
-  namespace: studybuddies
-spec:
-  type: ExternalName
-  externalName: httpbin.org
-```
-
-In the example above, when looking up the host cute-external-service.prod.svc.cluster.local, the cluster DNS Service returns a CNAME record with the value httpbin.org.
-
-Let's try it together!
-
-In the folder [externalname](session_7/externalname), you will find two files: [pod.yaml](session_7/externalname/pod.yaml) and [service.yaml](session_7/externalname/service.yaml). Apply them in the `studybuddies` namespace.
-
-```bash
-k apply -f session_7/externalname/pod.yaml
-k apply -f session_7/externalname/service.yaml
-```
-Now, let's test it by running a curl command in the pod:
-
-```bash
-k exec -it curl-test -n studybuddies -- curl cute-external-service/get
-```
-
->Note: httpbin.org is a free, open-source HTTP request & response testing service. It's designed for developers to inspect HTTP requests, simulate different kinds of responses and test HTTP clients (e.g., curl, Postman, code). /get is one of its endpoints that returns a JSON response with details about the request made to it.
-
-
-### Headless Service
-
-A Headless Service is a Service with no ClusterIP. It doesn’t load balance - instead, it lets you reach individual Pod IPs directly.
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-headless-service
-  namespace: studybuddies
-spec:
-  clusterIP: None
-  selector:
-    app: myapp
-  ports:
-    - port: 80
-```
-Headless services are most commonly used with StatefulSets, where each pod needs a stable DNS name.
-
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx
-  namespace: studybuddies
-spec:
-  clusterIP: None                       # None = Headless
-  selector:
-    app: nginx
-  ports:
-    - port: 80
-```
-
-```yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: nginx
-  namespace: studybuddies
-spec:
-  serviceName: nginx                    # Must match the headless service name
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-        - name: nginx
-          image: nginx
-          ports:
-            - containerPort: 80
-```
-
-Let's try it together! In the folder [headless](session_7/headless), you will find two files: [service.yaml](session_7/headless/service.yaml) and [statefulset.yaml](session_7/headless/statefulset.yaml). Apply them in the `studybuddies` namespace.
-
-And now, let's test it by running a curl command in the pod:
-
-
-```bash
-k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never -- sh
-
-curl echo-0.echo-headless.studybuddies.svc.cluster.local:8080
-```
-
-
->Notes: In the context of CKAD, you should be able to create a Service YAML from scratch or imperatively, connect pods to services using labels/selectors and understand how DNS resolution works (`my-service.my-namespace.svc.cluster.local`)
 
 ## Wrap up
 7th session is over!
@@ -397,7 +263,7 @@ curl echo-0.echo-headless.studybuddies.svc.cluster.local:8080
 Today, we have learned:
 * Understand authentication, authorization and admission control
 * Role-Based Access Control (RBAC) on namespace level
-* How to work with Services: ClusterIP, NodePort, LoadBalancer end even ExternalName and Headless as bonus
+* How to work with Services: ClusterIP and NodePort
 
 Great job, buddies! You are getting closer to the CKAD exam ;)
 
