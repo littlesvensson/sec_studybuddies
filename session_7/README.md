@@ -4,11 +4,11 @@ SESSION 7, 14.7.2025
 * Understand authentication, authorization and admission control
 * Role-Based Access Control (RBAC) on namespace level
 * Services:
- * ClusterIP
- * NodePort
- * LoadBalancer
- * ExternalName
- * Headless
+  * ClusterIP
+  * NodePort
+  * LoadBalancer
+  * ExternalName
+  * Headless
 
 ## Understand authentication, authorization and admission control
 
@@ -53,6 +53,15 @@ k config get-contexts
 k config use-context <context>
 k config current-context  
 ```
+To get the config with certs etc:
+```bash
+k config view --raw
+```
+
+To get the config with certs only for the current context:
+```bash
+k config view --raw --minify
+```
 
 When running commands through the pods, you are authenticated as the service account associated with that pod. 
 
@@ -94,7 +103,7 @@ rules:
 It is possible to do it imperatively as well:
 
 ```bash
-kubectl create role pod-ninga --verb=get,list,watch --resource=pods --namespace ninjanamespace
+kubectl create role pod-ninja --verb=get,list,watch --resource=pods --namespace ninjanamespace
 ``` 
 
 If you want to use all verbs:
@@ -159,13 +168,19 @@ What are the main functions of a Service:
 * decouples clients from Pods — which may come and go.
 * provide load balancing across Pods (not only the LoadBalancer type :) )
 
-
 **Types of Services**
 **ClusterIP**:	Exposes service within the cluster	Default, used for internal communication
 **NodePort**	Exposes service on a port on each Node’s IP	Useful for local testing, not recommended for production
 **LoadBalancer**	Uses cloud provider's external LB	For public access in cloud setups
 **ExternalName**	Maps to an external DNS	Rarely used in CKAD; just know what it is
 **HeadLess**	No ClusterIP, direct Pod access	Useful for StatefulSets or peer-to-peer apps
+
+
+### How to create a Service
+You can create a Service:
+- using a YAML manifest
+- imperatively with `k expose`
+- imperatively with `k create service`.
 
 ### ClusterIP (default)
 
