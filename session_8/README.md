@@ -196,36 +196,56 @@ spec:
     app: myapp
 ```
 
-
-
 ### TASK! (#3)
 
 
 
 ## Ingress
 
-An Ingress is an API object that:
+An Ingress resource in Kubernetes manages external access to services within a cluster, typically via HTTP or HTTPS. It defines rules for routing traffic based on the request's host or path to the appropriate backend services.
 
-- Exposes HTTP/HTTPS routes from outside the cluster to services inside
-- Acts like a reverse proxy: routes traffic based on hostnames and paths
-- Requires an Ingress Controller (e.g., NGINX Ingress Controller) to function
+The rules specified within by the ingress object are interpreted by an **Ingress Controller** which is a Kubernetes component that watches Ingress resources and manages the actual routing of external HTTP/HTTPS traffic to the appropriate services inside the cluster. The Ingress Controller does not come by default; you need to deploy one, such as the NGINX Ingress Controller or Traefik. <br>
 
-What You Need to Know for CKAD
-1. Understand Basic Ingress YAML
-2. Know That an Ingress Controller Is Required
-3. Use kubectl port-forward for testing
+In the context of CKAD, you should be able to create an Ingress resource, understand its basic structure, and know that an Ingress Controller is required for it to function. However, you are not expected to install or configure an Ingress Controller in the exam environment.
 
+Let's have a look at the basic structure of an Ingress resource from the documentation:
 
-Common Ingress Tasks in CKAD
-You may be asked to:
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minimal-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx-example                   # Define the Ingress Controller to use
+  rules:
+  - http:
+      paths:
+      - path: /testpath
+        pathType: Prefix                            # Request path based on a prefix match
+        backend:
+          service:
+            name: test
+            port:
+              number: 80
+```
+**nginx.ingress.kubernetes.io/rewrite-target: /** : rewrite the matched request path to / before forwarding it to the backend service. If your Ingress rule matches /testpath as in the example, and a client requests /testpath/home, the path sent to the backend will be rewritten to /home
+**ingressClassName**: Specify the Ingress Controller you want to use. You can get the name of the Ingress Controller by running `k get ingressclass`.
+**pathType**: Defines how the path is matched. Common values are `Prefix` (matches all paths starting with the specified path) and `Exact` (matches only the exact path)
+**service.name**: The name of the service to route traffic to
+**service.port.number**: The port on the service to route traffic to
+**backend**: Defines the backend service to route traffic to based on the specified rules. It's a combination of the service name and port. 
+
+> Note: It is possible to define a default backend service that will handle requests that do not match any of the specified rules. This is done by adding a `defaultBackend` section in the `spec` of the Ingress resource. However, this is [usually setup on the level of the Ingress Controller](https://kubernetes.github.io/ingress-nginx/examples/customization/custom-errors/), not in the Ingress resource itself.
+
+Common Ingress Tasks in CKAD:
 
 - Create an Ingress to expose a service
 - Route multiple paths or hostnames
 - Fix an Ingress that's misconfigured (e.g., wrong pathType, wrong service name)
 
-
-5. Optional: TLS Support
-You’re not required to deeply configure TLS, but should recognize a TLS block:
+> Note:TLS Support - You’re not required to deeply configure TLS, but should recognize a TLS block:
 
 ```yaml
 tls:
@@ -237,6 +257,14 @@ tls:
 ### Task! (#4)
 
 This time, the task is awaiting you in the [Killercoda: Ingress create section].(https://killercoda.com/killer-shell-ckad/scenario/ingress-create). Once you will get the last check successfully, please do not close the scenario, just express your happiness in the chat, we will do some check together.
+
+The check:
+
+```bash
+curl -H "Host: world.universe.mine" http://localhost:<ingress controller node port>/europe  
+curl -H "Host: world.universe.mine" http://localhost:<ingress controller node port>/asia
+```
+You're sending the request to port 30080, which is the NodePort exposed by the NGINX Ingress Controller. This internally forwards the request to port 80 of the Ingress controller pod. In Killercoda, localhost works because you're testing from the controlplane node, which runs the ingress controller. The part -H "Host: world.universe.mine" is crucial because it tells the Ingress controller which host to match against the rules defined in the Ingress resource. The Ingress rule matches by Host. We are imitating a real-world scenario where you would access the service via a domain name (world.universe.mine) instead of an IP address.
 
 
 ## Wrap up
