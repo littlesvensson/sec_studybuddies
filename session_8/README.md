@@ -2,13 +2,9 @@ SESSION 8, 16.7.2025
 ========================
 
 * How to work with Services: LoadBalancer, ExternalName, Headless
+* Blue/Green, Canary deployments in Kubernetes native way
 * Ingress, Use Ingress rules to expose applications
-* Blue/Green, Canary, Rolling updates in Kubernetes native way
 * Provide and troubleshoot access to applications via services
-* Demonstrate basic understanding of NetworkPolicies
-* Helm (just basics for CKAD)
-* Kustomize (just basics for CKAD)
-
 
 ### LoadBalancer
 LoadBalancer is used in cloud environments to expose the service externally. It creates an external load balancer that routes traffic to the service. This is the most common way to expose services in production.
@@ -311,5 +307,15 @@ Result:
 5/6 of requests go to stable
 1/6 go to canary
 
+
+## Wrap up
+8th session is behind us, ou yeaaaaah!
+
+Today, we have had a look at:
+* Some new Service types: LoadBalancer, ExternalName, Headless
+* How to do Blue/Green and Canary deployments in Kubernetes native way
+* What is Ingress and how to use it
+
+Good work, studybuddies! The last session is ahead of us, so let's keep the pace!
 
 
