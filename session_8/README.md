@@ -1,8 +1,9 @@
 SESSION 8, 16.7.2025 
 ========================
 
+* How to work with Services: LoadBalancer, ExternalName, Headless
 * Ingress, Use Ingress rules to expose applications
-* Blue/Green, Canary, Rolling updates
+* Blue/Green, Canary, Rolling updates in Kubernetes native way
 * Provide and troubleshoot access to applications via services
 * Demonstrate basic understanding of NetworkPolicies
 * Helm (just basics for CKAD)
@@ -91,7 +92,6 @@ spec:
 ```
 Headless services are most commonly used with StatefulSets, where each pod needs a stable DNS name.
 
-
 ```yaml
 apiVersion: v1
 kind: Service
@@ -145,15 +145,22 @@ curl echo-0.echo-headless.studybuddies.svc.cluster.local:8080
 >Notes: In the context of CKAD, you should be able to create a Service YAML from scratch or imperatively, connect pods to services using labels/selectors and understand how DNS resolution works (`my-service.my-namespace.svc.cluster.local`)
 
 
+## Blue/Green Deployment (CKAD Level)
+
+A Blue-Green Deployment is a deployment strategy where two identical environments, the “blue” environment and the “green” environment, are set up. The blue environment is the production environment, where the live version of the application is currently running, and the green environment is the non-production environment, where new versions of the application are deployed.
+
+When a new version of the application is ready to be deployed, it is deployed to the green environment. Once the new version is deployed and tested, traffic is switched to the green environment, making it the new production environment. The blue environment then becomes the non-production environment, where future versions of the application can be deployed.
+
+![Blue/Green Deployment](../assets/blue_green_deployment.png)
+
+
 ## Ingress
 
 An Ingress is an API object that:
 
-Exposes HTTP/HTTPS routes from outside the cluster to services inside.
-
-Acts like a reverse proxy: routes traffic based on hostnames and paths.
-
-Requires an Ingress Controller (e.g., NGINX Ingress Controller) to function.
+- Exposes HTTP/HTTPS routes from outside the cluster to services inside
+- Acts like a reverse proxy: routes traffic based on hostnames and paths
+- Requires an Ingress Controller (e.g., NGINX Ingress Controller) to function
 
 What You Need to Know for CKAD
 1. Understand Basic Ingress YAML
@@ -165,11 +172,9 @@ What You Need to Know for CKAD
 Common Ingress Tasks in CKAD
 You may be asked to:
 
-Create an Ingress to expose a service
-
-Route multiple paths or hostnames
-
-Fix an Ingress that's misconfigured (e.g., wrong pathType, wrong service name)
+- Create an Ingress to expose a service
+- Route multiple paths or hostnames
+- Fix an Ingress that's misconfigured (e.g., wrong pathType, wrong service name)
 
 
 5. Optional: TLS Support
@@ -183,24 +188,32 @@ tls:
 ```
 
 
-## Blue/Green Deployment (CKAD Level)
+### Task! (#1)
 
-Concept:
-Run two separate versions of the app (e.g., v1 = "blue", v2 = "green") in parallel.
-Switch traffic from blue to green by updating the Service selector.
+This time, the task is awaiting you in the [Killercoda: Ingress create section].(https://killercoda.com/killer-shell-ckad/scenario/ingress-create). Once you will get the last check successfully, please do not close the scenario, just express your happiness in the chat, we will do some check together.
 
-What You Should Know:
-Deploy two Deployments:
 
-blue-deployment (label version: blue)
-green-deployment (label version: green)
+### Task! (#2)
 
-The Service routes traffic based on version.
+In the folder task8_2, you will find manifess for both blue and green deployment in the deployments.yaml file. Apply them in the `studybuddies` namespace.
 
-### Task! (#3)
+Create a Service that selects both Deployments:
 
-You already have a Deployment myapp-blue running in the studybuddies namespace.
-Your task is to:
+```yaml
+apiVersion: v1
+kind: Service
+metadata:     
+  name: myapp-service
+  namespace: studybuddies
+spec:
+  selector:
+    app: myapp
+  ports:
+    - port: 80
+      targetPort: 8080  
+
+
+```bash
 
 Deploy a new version of the app called myapp-green with label version: green.
 
@@ -294,114 +307,9 @@ container port: 8080
 
 Update the Service myapp-service (already selects app: myapp) to include both versions (which already happens if both have app: myapp).
 
-💡 Result:
+Result:
 5/6 of requests go to stable
 1/6 go to canary
 
 
 
-## Network Policies
-
-## Helm
-
-you should know how to use Helm to deploy applications, but only at a basic user level, not authoring charts or deep templating
-
-1. Install and Use a Chart
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo update
-helm install my-nginx bitnami/nginx
-
-2. Upgrade a Release
-helm upgrade my-nginx bitnami/nginx --set service.type=NodePort
-
-3. Uninstall a Release
-helm uninstall my-nginx
-
-
-4. View Installed Releases
-helm list
-
-
-5. Inspect a Chart or Values
-helm show values bitnami/nginx
-
-In the CKAD exam, you might be asked to:
-Deploy a Helm chart from a public repo
-
-Set specific values (e.g., replicas, service type)
-
-Upgrade or delete a release
-
-What You don’t need to know:
-Writing custom Helm charts (Chart.yaml, templates, etc.)
-
-Helm hooks, complex values.yaml logic
-
-### TASK! (#2)
-
-Install the Bitnami NGINX Helm chart in the studybuddies namespace.
-Name the release webserver, and make sure the Service is of type NodePort.
-
-
-## Kustomize
-
-you should know how to use it, but only at a practical, basic level. You're not expected to master advanced overlays or plugin systems.
-
-1. What Kustomize Is
-A tool built into kubectl (kubectl apply -k) for customizing Kubernetes YAML without modifying the originals.
-
-It works by combining base YAML files and applying patches, name prefixes, labels, etc.
-
-2. Basic Concepts You Must Understand
-Directory structure (typical):
-
-my-app/
-├── deployment.yaml
-├── service.yaml
-└── kustomization.yaml
-
-
-kustomization.yaml example:
-
-resources:
-  - deployment.yaml
-  - service.yaml
-
-namePrefix: studybuddies-
-commonLabels:
-  app: myapp
-
-
-What this does:
-Includes deployment.yaml and service.yaml
-
-Adds a name prefix like studybuddies-deployment
-
-Adds a label app=myapp to all objects
-
-
-3. What CKAD Might Ask You to Do
-Create or modify a kustomization.yaml
-
-Deploy resources using:
-kubectl apply -k ./my-app
-Add a label or namePrefix using Kustomize
-
-Understand how patches or environment-specific configs are applied
-
-
- What You Do Not Need to Know
-No need for advanced overlays or generators
-
-No need to write strategic merge patches or JSON6902 patches
-
-No need to install Kustomize separately (it's built into kubectl)
-
-
-Summary Table
-Topic	Required for CKAD
-Understand kustomization.yaml	✅ Yes
-Use kubectl apply -k	✅ Yes
-Add labels, prefixes	✅ Yes
-Use overlays or advanced patches	❌ No
-Understand Kustomize structure	✅ Yes

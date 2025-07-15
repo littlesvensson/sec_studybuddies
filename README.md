@@ -22,7 +22,7 @@ Repo with material for the POC CKAD training sessions
 
 #### Application Environment, Configuration and Security (25%)
 - [x] Discover and use resources that extend Kubernetes (CRD, Operators)
-- [ ] Understand authentication, authorization and admission control
+- [x] Understand authentication, authorization and admission control
 - [x] Understand requests, limits, quotas
 - [x] Understand ConfigMaps
 - [x] Define resource requirements
