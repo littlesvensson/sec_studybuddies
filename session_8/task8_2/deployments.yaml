@@ -43,7 +43,7 @@ spec:
     metadata:
       labels:
         app: myapp
-        version: blue
+        version: green
     spec:
       containers:
       - name: echo

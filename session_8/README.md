@@ -34,6 +34,9 @@ spec:
 - You need external access to your app.
 - You want automatic IP + DNS assignment via the provider.
 
+### TASK! (#1)
+
+TO DO: Create a LoadBalancer service for the existing Deployment myapp in the `studybuddies` namespace, try it with the create command.
 
 ### BONUS: ExternalName Service
 
@@ -147,109 +150,30 @@ A Blue-Green Deployment is a deployment strategy where two identical environment
 
 When a new version of the application is ready to be deployed, it is deployed to the green environment. Once the new version is deployed and tested, traffic is switched to the green environment, making it the new production environment. The blue environment then becomes the non-production environment, where future versions of the application can be deployed.
 
-![Blue/Green Deployment](../assets/blue_green_deployment.png)
-
-
-## Ingress
-
-An Ingress is an API object that:
-
-- Exposes HTTP/HTTPS routes from outside the cluster to services inside
-- Acts like a reverse proxy: routes traffic based on hostnames and paths
-- Requires an Ingress Controller (e.g., NGINX Ingress Controller) to function
-
-What You Need to Know for CKAD
-1. Understand Basic Ingress YAML
-2. Know That an Ingress Controller Is Required
-3. Use kubectl port-forward for testing
-
-
-
-Common Ingress Tasks in CKAD
-You may be asked to:
-
-- Create an Ingress to expose a service
-- Route multiple paths or hostnames
-- Fix an Ingress that's misconfigured (e.g., wrong pathType, wrong service name)
-
-
-5. Optional: TLS Support
-You’re not required to deeply configure TLS, but should recognize a TLS block:
-
-```yaml
-tls:
-- hosts:
-  - myapp.example.com
-  secretName: tls-secret
-```
-
-
-### Task! (#1)
-
-This time, the task is awaiting you in the [Killercoda: Ingress create section].(https://killercoda.com/killer-shell-ckad/scenario/ingress-create). Once you will get the last check successfully, please do not close the scenario, just express your happiness in the chat, we will do some check together.
-
+![Blue/Green Deployment](../assets/blue_green_deployment.png) <br>
+Image source: [medium.com](https://medium.com/cloud-native-daily/blue-green-deployments-with-kubernetes-a-comprehensive-guide-5d196dad1976)
 
 ### Task! (#2)
 
 In the folder task8_2, you will find manifess for both blue and green deployment in the deployments.yaml file. Apply them in the `studybuddies` namespace.
 
-Create a Service that selects both Deployments:
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:     
-  name: myapp-service
-  namespace: studybuddies
-spec:
-  selector:
-    app: myapp
-  ports:
-    - port: 80
-      targetPort: 8080  
-
+- Create a Service that selects the blue version of the app (version: blue).
+- Check if the Service is working by running a curl command in the pod.
+- Edit the Service to select the green version of the app (version: green).
+- Check if the Service is still working by running a curl command in the pod:
 
 ```bash
+k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never -- sh
+curl myapp-service:8080
+```
 
-Deploy a new version of the app called myapp-green with label version: green.
-
-Update the existing Service myapp-service to route traffic to the green version instead of blue.
-
-
-
-# Service pointing to blue
-selector:
-  app: myapp
-  version: blue
-
-
-To switch traffic to green, change the selector to version: green.
-
-Skills CKAD tests:
-Modify Service.spec.selector
-
-Label Deployments appropriately
-
-Understand impact of traffic shifting
 
 
 ## Canary Deployment
-Concept:
-Deploy a new version (e.g., v2) to a subset of users by running a small number of pods alongside the stable version (v1).
 
-Concept:
-Deploy a new version (e.g., v2) to a subset of users by running a small number of pods alongside the stable version (v1).
+A canary deployment in Kubernetes is a strategy where a small subset of users is routed to a new version of an application, while the rest continue using the stable version. This allows teams to test and monitor the new release in production with minimal risk before gradually rolling it out to all users.
 
-What You Should Know:
-Create a second Deployment with fewer replicas and a different label (e.g., version: canary)
-
-Use label selectors to route some traffic to canary
-
-Either:
-
-Add both v1 and canary Pods under same Service, OR
-
-Create two Services, and control traffic split externally (e.g., via Ingress or client-side logic)
+### How It Works
 
 ```yaml
 # Stable Deployment (v1)
@@ -272,40 +196,47 @@ spec:
     app: myapp
 ```
 
-If v1 has 5 pods and canary has 1, about 1/6 of requests will hit canary (round-robin).
 
-CKAD Skills:
-Create multiple Deployments
 
-Control traffic using replica count
+### TASK! (#3)
 
-Understand basic traffic splitting via label-based Services
 
-In CKAD, You Might Be Asked To:
-Deploy a new canary version alongside the current one
 
-Change a Service to point to the new version (blue/green)
+## Ingress
 
-Scale down the old deployment after verification
+An Ingress is an API object that:
 
-### TASK! (#4)
+- Exposes HTTP/HTTPS routes from outside the cluster to services inside
+- Acts like a reverse proxy: routes traffic based on hostnames and paths
+- Requires an Ingress Controller (e.g., NGINX Ingress Controller) to function
 
-You already have a Deployment myapp-stable with:
+What You Need to Know for CKAD
+1. Understand Basic Ingress YAML
+2. Know That an Ingress Controller Is Required
+3. Use kubectl port-forward for testing
 
-5 replicas
-label: version: stable
-Create a new Deployment myapp-canary:
 
-1 replica
-label: version: canary
-image: nginx:1.21
-container port: 8080
+Common Ingress Tasks in CKAD
+You may be asked to:
 
-Update the Service myapp-service (already selects app: myapp) to include both versions (which already happens if both have app: myapp).
+- Create an Ingress to expose a service
+- Route multiple paths or hostnames
+- Fix an Ingress that's misconfigured (e.g., wrong pathType, wrong service name)
 
-Result:
-5/6 of requests go to stable
-1/6 go to canary
+
+5. Optional: TLS Support
+You’re not required to deeply configure TLS, but should recognize a TLS block:
+
+```yaml
+tls:
+- hosts:
+  - myapp.example.com
+  secretName: tls-secret
+```
+
+### Task! (#4)
+
+This time, the task is awaiting you in the [Killercoda: Ingress create section].(https://killercoda.com/killer-shell-ckad/scenario/ingress-create). Once you will get the last check successfully, please do not close the scenario, just express your happiness in the chat, we will do some check together.
 
 
 ## Wrap up
