@@ -7,3 +7,7 @@ spec:
   clusterIP: None
   selector:
     app: echo
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080

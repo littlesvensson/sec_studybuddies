@@ -180,7 +180,9 @@ k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never --
 
 curl echo-0.echo-headless.studybuddies.svc.cluster.local:8080
 ```
->Notes: In the context of CKAD, you should be able to create a Service YAML from scratch or imperatively, connect pods to services using labels/selectors and understand how DNS resolution works (`my-service.my-namespace.svc.cluster.local`)
+
+>Note: What’s the Point of port: 80 in the Service YAML? It’s useful for SRV records (used by some clients), uniformity in service definitions, service discovery when using regular (non-headless) services, APIs or tools that might inspect the service port definition. But in our headless case — especially with a StatefulSet — it doesn't affect curl directly.
+>Note2: In the context of CKAD, you should be able to create a Service YAML from scratch or imperatively, connect pods to services using labels/selectors and understand how DNS resolution works (`my-service.my-namespace.svc.cluster.local`)
 
 ## Blue/Green Deployment (CKAD Level)
 
@@ -195,14 +197,19 @@ Image source: [medium.com](https://medium.com/cloud-native-daily/blue-green-depl
 
 In the folder task8_2, you will find manifess for both blue and green deployment in the deployments.yaml file. Apply them in the `studybuddies` namespace.
 
-- Create a Service that selects the blue version of the app (version: blue).
-- Check if the Service is working by running a curl command in the pod.
-- Edit the Service to select the green version of the app (version: green).
+- Create a Service with name `green-blue` that selects the blue version of the app (version: blue). Service port should be 80 and target port should be 8080. 
+- Check if the Service is working by running a curl command in the pod:
+
+```bash
+k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never -- sh
+curl green-blue
+```
+- Edit the Service to select the green version of the app (version: green). You can do it by doint the changes through k `edit svc -n studybuddies green-blue` or by changing the `deployment.yaml` file and applying it again.
 - Check if the Service is still working by running a curl command in the pod:
 
 ```bash
 k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never -- sh
-curl myapp-service:8080
+curl green-blue
 ```
 
 ## Canary Deployment
@@ -234,6 +241,16 @@ spec:
 
 ### TASK! (#3)
 
+- Apply manifest for two deployments in the `task8_3` folder. The first one is the stable version (v1) and the second one is the canary version (canary).
+- Create a ClusterIP Sevice with name `canary-service` that selects both deployments (v1 and canary) and exposes them on port 80. The target port should be 8080.
+- Check if the Service is working by running a curl command in the pod:
+
+```bash
+k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never -- sh
+while true; do curl canary-service; sleep 1; done
+```
+- scale the canary deployment to 3 replicas and test the curl command again. You should see that the responses are coming from both deployments.
+- scale the stable deployment to 0 replicas and test the curl command again. You should see that the responses are coming only from the canary deployment.
 
 
 ## Ingress
