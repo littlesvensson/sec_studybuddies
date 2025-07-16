@@ -113,7 +113,6 @@ k exec -it curl-test -n studybuddies -- curl cute-external-service/get
 
 >Note: A good use case for an ExternalName service is to allow Kubernetes workloads to access an external database (like db.example.com) using a consistent internal DNS name (db.my-namespace.svc.cluster.local) without exposing it via an internal proxy - It's good because it lets you abstract external dependencies behind Kubernetes-native DNS names, so your apps can use the same service discovery mechanism (<service>.<namespace>.svc) for both internal and external services — making configuration simpler, portable, and easier to manage.
 
-
 ### Headless Service
 
 A Headless Service is a Service with no ClusterIP. It doesn’t load balance - instead, it lets you reach individual Pod IPs directly.
