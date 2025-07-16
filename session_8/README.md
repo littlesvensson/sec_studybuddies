@@ -13,7 +13,7 @@ LoadBalancer is used in cloud environments to expose the service externally. It 
 apiVersion: v1
 kind: Service
 metadata:
-  name: myapp-service
+  name: cool-app-service
   namespace: studybuddies
 spec:
   type: LoadBalancer
@@ -24,10 +24,42 @@ spec:
       targetPort: 8080                             # Container port
 ```
 
+Creating a service with the svc create command:
+
+```bash
+k create svc <type of service> <name of service> --tcp=<port>:<target port> 
+
+k create svc loadbalancer cool-app-service --tcp=80:8080 --tcp=443:443 --dry-run=client -oyaml
+```
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: cool-app-service
+  name: cool-app-service
+spec:
+  ports:
+  - name: 80-8080
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: 443-443
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: cool-app-service                        # Label to match Pods
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+```
+
 *What this does:*
 - Exposes your app to external traffic via a cloud provider's LoadBalancer.
 - The service is reachable via an external IP (automatically assigned, will not work with local environment).
-- Internally, traffic is routed to Pods with label app: myapp, hitting port 8080 on the container.
+- Internally, traffic is routed to Pods with label
 
 *Use this when:
 - You're in a cloud environment (Openstac, AWS, GCP, Azure...)
@@ -36,7 +68,15 @@ spec:
 
 ### TASK! (#1)
 
-TO DO: Create a LoadBalancer service for the existing Deployment myapp in the `studybuddies` namespace, try it with the create command.
+- Create a pod in the `studybuddies` namespace with name `lunchserver` and image `littlesvensson/lunchserver:v2 `
+- Create a LoadBalancer service for the  `lunchserver` pod, use service port 80 and target port 8080
+- Unfortunately, we will not get assigned IP in the local environment, but you can check the service with `k get svc -n studybuddies` and see that it has type LoadBalancer.
+- If you want to test it, you can use the `curl` command in the pod to check if the service is working, e.g. `k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never -- sh` and then:
+  - either `curl <service ip>:<service port>` 
+  - or `curl lunchserver:80` (if you have DNS resolution working in your cluster)
+  - if you were in a different namespace with the testing pod, you would need to write the full dns name for the service: `curl lunchserver.studybuddies.svc.cluster.local:80` 
+
+Done? Express your happiness in the chat! 
 
 ### BONUS: ExternalName Service
 
@@ -60,8 +100,8 @@ Let's try it together!
 In the folder [externalname](session_7/externalname), you will find two files: [pod.yaml](session_7/externalname/pod.yaml) and [service.yaml](session_7/externalname/service.yaml). Apply them in the `studybuddies` namespace.
 
 ```bash
-k apply -f session_7/externalname/pod.yaml
-k apply -f session_7/externalname/service.yaml
+k apply -f session_8/externalname/pod.yaml
+k apply -f session_8/externalname/service.yaml
 ```
 Now, let's test it by running a curl command in the pod:
 
@@ -70,6 +110,8 @@ k exec -it curl-test -n studybuddies -- curl cute-external-service/get
 ```
 
 >Note: httpbin.org is a free, open-source HTTP request & response testing service. It's designed for developers to inspect HTTP requests, simulate different kinds of responses and test HTTP clients (e.g., curl, Postman, code). /get is one of its endpoints that returns a JSON response with details about the request made to it.
+
+>Note: A good use case for an ExternalName service is to allow Kubernetes workloads to access an external database (like db.example.com) using a consistent internal DNS name (db.my-namespace.svc.cluster.local) without exposing it via an internal proxy - It's good because it lets you abstract external dependencies behind Kubernetes-native DNS names, so your apps can use the same service discovery mechanism (<service>.<namespace>.svc) for both internal and external services — making configuration simpler, portable, and easier to manage.
 
 
 ### Headless Service
@@ -139,10 +181,7 @@ k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never --
 
 curl echo-0.echo-headless.studybuddies.svc.cluster.local:8080
 ```
-
-
 >Notes: In the context of CKAD, you should be able to create a Service YAML from scratch or imperatively, connect pods to services using labels/selectors and understand how DNS resolution works (`my-service.my-namespace.svc.cluster.local`)
-
 
 ## Blue/Green Deployment (CKAD Level)
 
@@ -166,8 +205,6 @@ In the folder task8_2, you will find manifess for both blue and green deployment
 k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never -- sh
 curl myapp-service:8080
 ```
-
-
 
 ## Canary Deployment
 
