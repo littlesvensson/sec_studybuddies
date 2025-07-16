@@ -76,6 +76,37 @@ You're sending the request to the node port, which is the NodePort exposed by th
 
 ## Network Policies
 
+NetworkPolicies control which pods can communicate with each other (and with the outside world) at the network level, based on labels, namespaces, and IP blocks.
+
+Default behavior	Pods can talk to each other freely unless a NetworkPolicy is applied.
+Selector-based	Policies apply to selected pods via podSelector.
+Ingress vs Egress	You can restrict incoming (ingress) and/or outgoing (egress) traffic.
+Isolation begins only when a policy is applied	A pod becomes isolated for ingress or egress only when a policy for that direction exists.
+Based on labels	Matching is done with labels, not pod names or IPs.
+NamespaceSelector	You can allow or deny traffic from specific namespaces too.
+ipBlock	You can allow access to/from specific IP CIDR ranges.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-selected
+spec:
+  podSelector:
+    matchLabels:
+      app: my-app
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          access: allowed
+```
+You'll likely create or edit a NetworkPolicy YAML.
+Know how to allow traffic only from certain pods.
+Understand how isolation works: once a policy exists, only allowed traffic gets through.
+
+
+
 ## Helm
 
 Helm is a Kubernetes package manager that simplifies deploying, upgrading, and managing applications using reusable, versioned templates called charts. You should know how to use Helm to deploy applications, but only at a **basic user level**.
