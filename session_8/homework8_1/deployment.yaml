@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homework1
+  namespace: studybuddies
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: homework1
+  template:
+    metadata:
+      labels:
+        app: homework1
+    spec:
+      containers:
+      - name: echo
+        image: hashicorp/http-echo
+        args:
+          - "-text=Hallöchen from your homework pod!"
+          - "-listen=:8080"
+        ports:
+          - containerPort: 8080
