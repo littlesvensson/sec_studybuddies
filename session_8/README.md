@@ -68,7 +68,7 @@ status:
 
 ### TASK! (#1)
 
-- Create a pod in the `studybuddies` namespace with name `lunchserver` and image `littlesvensson/lunchserver:v2 `
+- Create a deployment in the `studybuddies` namespace with name `lunchserver` and image `littlesvensson/lunchserver:v2 `
 - Create a LoadBalancer service for the  `lunchserver` pod, use service port 80 and target port 8080
 - Unfortunately, we will not get assigned IP in the local environment, but you can check the service with `k get svc -n studybuddies` and see that it has type LoadBalancer.
 - If you want to test it, you can use the `curl` command in the pod to check if the service is working, e.g. `k run -it --rm tester --image=curlimages/curl -n studybuddies --restart=Never -- sh` and then:
