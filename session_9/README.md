@@ -1,10 +1,9 @@
 SESSION 9, 18.7.2025 
 ========================
 
+* Ingress
 * Network Policies
 * Helm (just basics for CKAD)
-* Kustomize (just basics for CKAD)
-* Recap and last tips before the exam
 
 ## Ingress
 
@@ -13,6 +12,11 @@ An Ingress resource in Kubernetes manages external access to services within a c
 The rules specified within by the ingress object are interpreted by an **Ingress Controller** which is a Kubernetes component that watches Ingress resources and manages the actual routing of external HTTP/HTTPS traffic to the appropriate services inside the cluster. The Ingress Controller does not come by default; you need to deploy one, such as the NGINX Ingress Controller or Traefik. <br>
 
 In the context of CKAD, you should be able to create an Ingress resource, understand its basic structure, and know that an Ingress Controller is required for it to function. However, you are not expected to install or configure an Ingress Controller in the exam environment.
+
+![Ingress and Ingress Controller](../assets/ingress_ingresscontroller.png) <br>
+Image source: [AWS](https://aws.amazon.com/blogs/containers/exposing-kubernetes-applications-part-3-nginx-ingress-controller/)
+
+The controller deploys, configures, and manages Pods that contain instances of nginx, which is a popular open-source HTTP and reverse proxy server. These Pods are exposed via the controller’s Service resource, which receives all the traffic intended for the relevant applications represented by the Ingress and backend Services resources. The controller translates Ingress and Services’ configurations, in combination with additional parameters provided to it statically, into a standard nginx configuration. It then injects the configuration into the nginx Pods, which route the traffic to the application’s Pods.
 
 Let's have a look at the basic structure of an Ingress resource from the documentation:
 
@@ -72,7 +76,12 @@ curl -H "Host: world.universe.mine" http://localhost:<ingress controller node po
 ```
 You're sending the request to the node port, which is the NodePort exposed by the NGINX Ingress Controller. This internally forwards the request to port 80 of the Ingress controller pod. In Killercoda, localhost works because you're testing from the controlplane node, which runs the ingress controller. The part -H "Host: world.universe.mine" is crucial because it tells the Ingress controller which host to match against the rules defined in the Ingress resource. The Ingress rule matches by Host. We are imitating a real-world scenario where you would access the service via a domain name (world.universe.mine) instead of an IP address.
 
+### HOMEWORK! (#1) TODOOOOOOO
+In the folder [homework1](homework1), you have manifest definitions for some of the resources we have discussed. Apply them to the cluster and check if everything is working as expected. If not, try to fix the issues. You can check if the Ingress is working by running the following commands:
 
+```bash
+
+```
 
 ## Network Policies
 
@@ -149,9 +158,11 @@ k exec -n studybuddies deploy/frontend -- curl backend
 
 ### TASK! (#3)
 
+For the following task, please use the [Killercoda playground](https://killercoda.com/playgrounds/scenario/kubernetes), as with Kind we do not have any CNI for NetworkPolicies in place.
+
 - Create a new namespace called mystery.
 - In the folder [task8_3](task8_3), you have manifest definitions for two Deployments, one Service and a NetworkPolicy. Apply them to the `mystery` namespace.
-- It seems something is wrong with this setup. Why? Try to fix the issue by keeping NetworkPolicy without changes. You can check if the change is or is not working by running the following commands:
+- It seems something is wrong with this setup. Why? Try to fix the issue by **keeping NetworkPolicy without changes**. You can check if the change is or is not working by running the following commands:
 
 ```bash
 k exec -n mystery deploy/frontend -- curl backend
@@ -196,42 +207,4 @@ helm show values bitnami/nginx
 Install the Bitnami NGINX Helm chart in the studybuddies namespace.
 Name the release webserver, and make sure the Service is of type NodePort.
 
-## Kustomize
 
-Kustomize is a tool built into kubectl (kubectl apply -k) for customizing Kubernetes YAML without modifying the originals. You should know how to use it, but only at a practical, basic level. You're not expected to master advanced overlays or plugin systems.
-
-It works by combining base YAML files and applying patches, name prefixes, labels, etc.
-
-#### Basic Concepts 
-Directory structure (typical):
-
-my-app/
-├── deployment.yaml
-├── service.yaml
-└── kustomization.yaml
-
-kustomization.yaml example:
-
-resources:
-  - deployment.yaml
-  - service.yaml
-
-namePrefix: studybuddies-
-commonLabels:
-  app: myapp
-
-What this does:
-- Includes deployment.yaml and service.yaml
-- Adds a name prefix like studybuddies-deployment
-- Adds a label app=myapp to all objects
-
-#### What CKAD Might Ask You to Do
-- Create or modify a kustomization.yaml
-- Deploy resources using:
-- k apply -k ./my-app
-- Add a label or namePrefix using Kustomize
-
-#### What You Do Not Need to Know
-- No need for advanced overlays or generators
-- No need to write strategic merge patches or JSON6902 patches
-- No need to install Kustomize separately (it's built into kubectl)
