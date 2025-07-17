@@ -60,7 +60,7 @@ tls:
   secretName: tls-secret
 ```
 
-### Task! (#4)
+### Task! (#1)
 
 This time, the task is awaiting you in the [Killercoda: Ingress create section].(https://killercoda.com/killer-shell-ckad/scenario/ingress-create). Once you will get the last check successfully, please do not close the scenario, just express your happiness in the chat, we will do some check together.
 
@@ -76,36 +76,86 @@ You're sending the request to the node port, which is the NodePort exposed by th
 
 ## Network Policies
 
-NetworkPolicies control which pods can communicate with each other (and with the outside world) at the network level, based on labels, namespaces, and IP blocks.
+#### Key Concepts
 
-Default behavior	Pods can talk to each other freely unless a NetworkPolicy is applied.
-Selector-based	Policies apply to selected pods via podSelector.
-Ingress vs Egress	You can restrict incoming (ingress) and/or outgoing (egress) traffic.
-Isolation begins only when a policy is applied	A pod becomes isolated for ingress or egress only when a policy for that direction exists.
-Based on labels	Matching is done with labels, not pod names or IPs.
-NamespaceSelector	You can allow or deny traffic from specific namespaces too.
-ipBlock	You can allow access to/from specific IP CIDR ranges.
+NetworkPolicies control which pods can communicate with each other (and with the outside world) at the network level, based on labels, namespaces, and IP blocks. 
+
+They operate on the layer 3 (network layer, IP addresses) and layer 4 (transport layer, prodocol TCP/UDP, port) of the OSI model, allowing you to define rules for traffic flow between pods.
+
+- By default, all traffic is allowed unless NetworkPolicies are defined.
+- Once a NetworkPolicy applies to a pod, only the traffic explicitly allowed is permitted.
+
+When defining the NetworkPolicy, we can target specific workloads only through the `podSelector` field, which allows us to specify which pods the policy applies to. 
+
+Simple example from the [official documentation](https://kubernetes.io/docs/concepts/services-networking/network-policies/#networkpolicy-resource):
 
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-selected
+  name: test-network-policy
+  namespace: default
 spec:
   podSelector:
     matchLabels:
-      app: my-app
+      role: db
+  policyTypes:
+  - Ingress
+  - Egress
   ingress:
   - from:
+    - ipBlock:
+        cidr: 172.17.0.0/16
+        except:
+        - 172.17.1.0/24
+    - namespaceSelector:
+        matchLabels:
+          project: myproject
     - podSelector:
         matchLabels:
-          access: allowed
+          role: frontend
+    ports:
+    - protocol: TCP
+      port: 6379
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/24
+    ports:
+    - protocol: TCP
+      port: 5978
+
 ```
-You'll likely create or edit a NetworkPolicy YAML.
-Know how to allow traffic only from certain pods.
-Understand how isolation works: once a policy exists, only allowed traffic gets through.
 
+```bash
+k get netpol
+k get netpol -A
+k get netpol <name> -n <namespace> -oyaml
+k describe netpol <name>
+k delete netpol <name>
+k edit netpol <name>
+```
 
+### TASK! (#2)
+
+- In the folder [task8_2](task8_2), you have manifest definitions for two deployments and one service. Apply them. 
+- Create the NetworkPolicy in the `studybuddies` namespace with the name `allow-frontend-to-backend`. The policy should be applied to workloads with the label `app=backend` and should allow incoming traffic only from pods with the label `app=frontend` on `TCP port 8080`. Block all other ingress to backend pods.
+
+You can check if your network policy is working by running the following commands:
+
+```bash
+k exec -n studybuddies deploy/frontend -- curl backend
+```
+
+### TASK! (#3)
+
+- Create a new namespace called mystery.
+- In the folder [task8_3](task8_3), you have manifest definitions for two Deployments, one Service and a NetworkPolicy. Apply them to the `mystery` namespace.
+- It seems something is wrong with this setup. Why? Try to fix the issue by keeping NetworkPolicy without changes. You can check if the change is or is not working by running the following commands:
+
+```bash
+k exec -n mystery deploy/frontend -- curl backend
+```
 
 ## Helm
 
@@ -141,7 +191,7 @@ helm list -n <namespace>
 helm show values bitnami/nginx
 ```
 
-### TASK! (#2)
+### TASK! (#4)
 
 Install the Bitnami NGINX Helm chart in the studybuddies namespace.
 Name the release webserver, and make sure the Service is of type NodePort.

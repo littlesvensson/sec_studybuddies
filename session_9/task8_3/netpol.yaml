@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: mystery
+spec:
+  podSelector:
+    matchLabels:
+      app: backend                         # This policy applies to backend pods only
+  policyTypes:
+    - Ingress                              # We're only restricting incoming traffic
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              deploy: frontend             # Only allow traffic from frontend pods
+      ports:
+        - protocol: TCP
+          port: 8080                       # Only allow traffic to port 80
