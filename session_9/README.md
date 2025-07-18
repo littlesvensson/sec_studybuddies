@@ -76,11 +76,14 @@ curl -H "Host: world.universe.mine" http://localhost:<ingress controller node po
 ```
 You're sending the request to the node port, which is the NodePort exposed by the NGINX Ingress Controller. This internally forwards the request to port 80 of the Ingress controller pod. In Killercoda, localhost works because you're testing from the controlplane node, which runs the ingress controller. The part -H "Host: world.universe.mine" is crucial because it tells the Ingress controller which host to match against the rules defined in the Ingress resource. The Ingress rule matches by Host. We are imitating a real-world scenario where you would access the service via a domain name (world.universe.mine) instead of an IP address.
 
-### HOMEWORK! (#1) TODOOOOOOO
-In the folder [homework1](homework1), you have manifest definitions for some of the resources we have discussed. Apply them to the cluster and check if everything is working as expected. If not, try to fix the issues. You can check if the Ingress is working by running the following commands:
+### HOMEWORK! (#1) 
+In the folder [homework8_1](homework8_1), you have manifest definitions for some of the resources we have discussed. Apply them to the cluster and check if everything is working as expected. If not, try to fix the issues.
+
+
+For testing, you can use the same playground as for the task 1 and check if the request flow works correctly by running a command:
 
 ```bash
-
+curl -H "Host: homework.yourcooldomain.com" http://localhost:<NodePort Port>/
 ```
 
 ## Network Policies
@@ -175,14 +178,31 @@ Helm is a Kubernetes package manager that simplifies deploying, upgrading, and m
 #### Install and Use a Chart
 
 ```bash
-helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add <name it how you like> <repository URL>
+```
+
+#### Update the Helm repo with the latest charts:
+```bash
 helm repo update
-helm install my-nginx bitnami/nginx
+```
+
+#### Install a Chart to create a release
+```bash
+helm install <name> <chart>
 ```
 
 #### Upgrade a Release
 ```bash
-helm upgrade my-nginx bitnami/nginx --set replicaCount=3
+helm upgrade <release> <chart> --set replicaCount=3
+```
+
+#### Upgrade a Release with custom values
+```bash
+helm upgrade <release> <chart> --set replicaCount=3
+```
+
+```bash
+helm show values <chart>
 ```
 
 #### Uninstall a Release
@@ -197,14 +217,9 @@ helm list --all-namespaces
 helm list -n <namespace>
 ```
 
-#### Inspect a Chart or Values
-```bash
-helm show values bitnami/nginx
-```
-
 ### TASK! (#4)
 
-Install the Bitnami NGINX Helm chart in the studybuddies namespace.
-Name the release webserver, and make sure the Service is of type NodePort.
-
+- create a new namespace called `ingress`
+- in the newly created namespace, install the Bitnami NGINX Helm chart. The url to the chart is https://charts.bitnami.com/bitnami. Use the latest version of the chart.
+- name the release webserver
 
