@@ -152,13 +152,18 @@ k edit netpol <name>                                # Edit a specific NetworkPol
 For the following task, please use the [Killercoda playground](https://killercoda.com/playgrounds/scenario/kubernetes), as with Kind we do not have any CNI for NetworkPolicies in place.
 
 - Create a new namespace called `studybuddies`
-- In the folder [task9_3](task9_3), you have manifest definitions for two deployments and one service. Apply them. 
+- In the folder [task9_3](task9_3), you have [manifest definitions](./task9_3/manifests.yaml) for two deployments and one service. Apply them. 
 - Create the NetworkPolicy in the `studybuddies` namespace with the name `allow-frontend-to-backend`. The policy should be applied to workloads with the label `app=backend` and should allow incoming traffic only from pods with the label `app=frontend` on `TCP port 8080`. Block all other ingress to backend pods.
 
 You can check if your network policy is working by running the following commands:
 
 ```bash
 k exec -n studybuddies deploy/frontend -- curl backend
+```
+However, it should not work for:
+
+```bash
+k run test --rm -it --image=curlimages/curl -n studybuddies -- curl backend
 ```
 
 ## Wrap up
