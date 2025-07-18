@@ -1,24 +1,8 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  creationTimestamp: "2025-07-18T16:30:07Z"
-  labels:
-    kubernetes.io/metadata.name: studybuddies
-  name: studybuddies
-  resourceVersion: "4170"
-  uid: 1ff6946d-d218-41a4-8ff2-2b2d9f8e8ae7
-spec:
-  finalizers:
-  - kubernetes
-status:
-  phase: Active
----
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
-  namespace: studybuddies
+  namespace: mystery
 spec:
   replicas: 1
   selector:
@@ -43,12 +27,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: studybuddies
+  namespace: mystery
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: frontend
+      deploy: frontend
   template:
     metadata:
       labels:
@@ -58,13 +43,32 @@ spec:
         - name: curl
           image: curlimages/curl
           command: ["sleep", "3600"]
-
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: mystery
+spec:
+  podSelector:
+    matchLabels:
+      app: backend                         # This policy applies to backend pods only
+  policyTypes:
+    - Ingress                              # We're only restricting incoming traffic
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              deploy: frontend             # Only allow traffic from frontend pods
+      ports:
+        - protocol: TCP
+          port: 8080                       # Only allow traffic to port 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend
-  namespace: studybuddies
+  namespace: mystery
 spec:
   selector:
     app: backend
