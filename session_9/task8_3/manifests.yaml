@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: mystery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: hashicorp/http-echo
+          args:
+            - "-listen=:8080"
+            - "-text=Hello from Backend"
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: mystery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+      deploy: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: curl
+          image: curlimages/curl
+          command: ["sleep", "3600"]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: mystery
+spec:
+  podSelector:
+    matchLabels:
+      app: backend                         # This policy applies to backend pods only
+  policyTypes:
+    - Ingress                              # We're only restricting incoming traffic
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              deploy: frontend             # Only allow traffic from frontend pods
+      ports:
+        - protocol: TCP
+          port: 8080                       # Only allow traffic to port 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: mystery
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 80
+      targetPort: 8080
