@@ -77,7 +77,7 @@ curl -H "Host: world.universe.mine" http://localhost:<ingress controller node po
 You're sending the request to the node port, which is the NodePort exposed by the NGINX Ingress Controller. This internally forwards the request to port 80 of the Ingress controller pod. In Killercoda, localhost works because you're testing from the controlplane node, which runs the ingress controller. The part -H "Host: world.universe.mine" is crucial because it tells the Ingress controller which host to match against the rules defined in the Ingress resource. The Ingress rule matches by Host. We are imitating a real-world scenario where you would access the service via a domain name (world.universe.mine) instead of an IP address.
 
 ### HOMEWORK! (#1) 
-In the folder [homework8_1](homework8_1), you have manifest definitions for some of the resources we have discussed. Apply them to the cluster and check if everything is working as expected. If not, try to fix the issues.
+In the folder [homework8_1](homework9_1), you have manifest definitions for some of the resources we have discussed. Apply them to the cluster and check if everything is working as expected. If not, try to fix the issues.
 
 
 For testing, you can use the same playground as for the task 1 and check if the request flow works correctly by running a command:
@@ -153,7 +153,7 @@ k edit netpol <name>
 For the following task, please use the [Killercoda playground](https://killercoda.com/playgrounds/scenario/kubernetes), as with Kind we do not have any CNI for NetworkPolicies in place.
 
 - create a new namespace called `studybuddies`
-- In the folder [task8_2](task8_2), you have manifest definitions for two deployments and one service. Apply them. 
+- In the folder [task9_2](task9_2), you have manifest definitions for two deployments and one service. Apply them. 
 - Create the NetworkPolicy in the `studybuddies` namespace with the name `allow-frontend-to-backend`. The policy should be applied to workloads with the label `app=backend` and should allow incoming traffic only from pods with the label `app=frontend` on `TCP port 8080`. Block all other ingress to backend pods.
 
 You can check if your network policy is working by running the following commands:
@@ -167,7 +167,7 @@ k exec -n studybuddies deploy/frontend -- curl backend
 For the following task, please use the [Killercoda playground](https://killercoda.com/playgrounds/scenario/kubernetes), as with Kind we do not have any CNI for NetworkPolicies in place.
 
 - Create a new namespace called mystery.
-- In the folder [task8_3](task8_3), you have manifest definitions for two Deployments, one Service and a NetworkPolicy. Apply them to the `mystery` namespace.
+- In the folder [task9_3](task9_3), you have manifest definitions for two Deployments, one Service and a NetworkPolicy. Apply them to the `mystery` namespace.
 - It seems something is wrong with this setup. Why? Try to fix the issue by **keeping NetworkPolicy without changes**. You can check if the change is or is not working by running the following commands:
 
 ```bash
