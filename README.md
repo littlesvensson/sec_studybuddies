@@ -31,6 +31,6 @@ Repo with material for the POC CKAD training sessions
 - [x] Understand Application Security (SecurityContexts, Capabilities, etc.)
 
 #### Services and Networking (20%)
-- [ ] Demonstrate basic understanding of NetworkPolicies
-- [ ] Provide and troubleshoot access to applications via services
-- [ ] Use Ingress rules to expose applications
+- [x] Demonstrate basic understanding of NetworkPolicies
+- [x] Provide and troubleshoot access to applications via services
+- [x] Use Ingress rules to expose applications
