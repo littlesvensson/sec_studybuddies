@@ -16,7 +16,7 @@ To understan Network Policies OR/AND syntax better, I highly recommend experimen
 For the following task, please use the [Killercoda playground](https://killercoda.com/playgrounds/scenario/kubernetes), as with Kind we do not have any CNI for NetworkPolicies in place.
 
 - Create a new namespace called mystery.
-- In the folder [task9_3](task9_3), you have manifest definitions for two Deployments, one Service and a NetworkPolicy. Apply them to the `mystery` namespace.
+- In the folder [task10_1](task10_1), you have manifest definitions for two Deployments, one Service and a NetworkPolicy. Apply them to the `mystery` namespace.
 - It seems something is wrong with this setup. Why? Try to fix the issue by **keeping NetworkPolicy without changes**. You can check if the change is or is not working by running the following commands:
 
 ```bash
@@ -162,3 +162,15 @@ k rollout resume deployment my-app
 
 ## MOTIVATION!
 ![CKAD badge](../assets/ckad.png)
+
+
+## Wrap up
+
+WE MADE IT!!!!!
+
+By know, we have covered all the topics that are needed for the CKAD exam. I hope you enjoyed the sessions and learned a lot. <br>
+If you have any questions, please do not hesitate to reach out to me. Also, if you have any feedback or suggestions for improvements when it comes to the learning session, please let me know. The goal is that people learn, enjoy it, and ideally have also some fun while doing so.
+
+Cheers,
+
+Jaja
