@@ -9,7 +9,7 @@
 
 ## Network Policies pt. 2
 
-To understan Network Policies OR/AND syntax better, I highly recommend experimenting with the [Network Policy Editor by Isovalent] (https://editor.networkpolicy.io/). Just make sure to play within the Kubernetes Network Policy Tab and not the Cilium Network Policy Tab.
+To understan Network Policies OR/AND syntax better, I highly recommend experimenting with the [Network Policy Editor by Isovalent](https://editor.networkpolicy.io/). Just make sure to play within the Kubernetes Network Policy Tab and not the Cilium Network Policy Tab.
 
 ### TASK! (#1)
 
