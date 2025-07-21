@@ -129,6 +129,7 @@ k apply -k overlays/dev/
 
 ### TASK! (#3)
 
+There is a folder called [kustomize-example](./kustomize-example/) inspired by [similar kustomize structure by viadee](https://github.com/viadee/kustomize-examples/tree/master). It contains a base configuration and overlays for dev and prod environments.
 Apply the Kustomization for the prod environment in the folder [kustomize-example](./kustomize-example/). Create a new namespace if needed.
 
 ## Last Tips
