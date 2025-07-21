@@ -10,8 +10,8 @@ Repo with material for the POC CKAD training sessions
 #### Application Deployment (20%)
 - [x] Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary)
 - [x] Understand Deployments and how to perform rolling updates
-- [ ] Use the Helm package manager to deploy existing packages
-- [ ] Kustomize
+- [x] Use the Helm package manager to deploy existing packages
+- [x] Kustomize
 
 #### Application Observability and Maintenance (15%)
 - [x] Understand API deprecations
