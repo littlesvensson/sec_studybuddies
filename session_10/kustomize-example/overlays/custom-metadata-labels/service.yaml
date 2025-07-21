@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: the-coolest-app-in-the-world
+spec:
+  selector:
+    app: the-coolest-app-in-the-world
+  ports:
+  - port: 80
+    targetPort: 80

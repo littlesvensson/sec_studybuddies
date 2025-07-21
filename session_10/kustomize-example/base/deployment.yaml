@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-coolest-app-in-the-world
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: the-coolest-app-in-the-world
+  template:
+    metadata:
+      labels:
+        app: the-coolest-app-in-the-world
+    spec:
+      containers:
+      - name: the-coolest-app-in-the-world
+        image: alpine:3.10
+        tty: true
+        stdin: true
+        env:
+          - name: foo
+            value: bar
+        resources:
+          limits:
+            memory: "64Mi"
+            cpu: "100m"

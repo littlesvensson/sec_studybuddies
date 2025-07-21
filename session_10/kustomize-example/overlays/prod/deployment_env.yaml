@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-coolest-app-in-the-world
+spec:
+  template:
+    spec:
+      containers:
+      - name: the-coolest-app-in-the-world
+        image: alpine:3.10
+        env:
+          - name: foo
+            value: we-are-in-prod
+        envFrom:
+          - configMapRef:
+              name: app-config
+          - secretRef:
+              name: credentials
