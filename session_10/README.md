@@ -1,4 +1,17 @@
-### TASK! (#3)
+(FINAL) SESSION 10, 21.7.2025 
+========================
+
+* Network Policies
+* Helm  
+* Kustomize
+* Last Tips 
+
+
+## Network Policies pt. 2
+
+To understan Network Policies OR/AND syntax better, I highly recommend experimenting with the [Network Policy Editor by Isovalent] (https://editor.networkpolicy.io/). Just make sure to play within the Kubernetes Network Policy Tab and not the Cilium Network Policy Tab.
+
+### TASK! (#1)
 
 For the following task, please use the [Killercoda playground](https://killercoda.com/playgrounds/scenario/kubernetes), as with Kind we do not have any CNI for NetworkPolicies in place.
 
